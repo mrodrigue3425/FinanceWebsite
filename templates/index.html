@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+<!-- Sets the browser tab title for the homepage -->
+{% block title %}Home{% endblock %}
+
+<!-- Fills the main content area (inside the <main> tag) -->
+{% block content %}
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-lg">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Fixed Income Market Overview</h1>
+            <p class="col-md-8 fs-4">Quickly access the latest government bond data from Banxico and navigate to our detailed yield curve analysis.</p>
+            <a href="/FI_Dashboard" class="btn btn-primary btn-lg">View Dashboard</a>
+        </div>
+    </div>
+        <div class="p-5 mb-4 bg-light rounded-3 shadow-lg">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Options Pricing</h1>
+            <p class="col-md-8 fs-4">Price european stock options</p>
+            <a href="/Options_Pricer" class="btn btn-primary btn-lg">View Dashboard</a>
+        </div>
+    </div>
+{% endblock %}
