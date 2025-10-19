@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 
-<!-- Sets the browser tab title for the homepage -->
 {% block title %}Fixed Income Dashboard{% endblock %}
 
 {% block head %}
-    <!--{{ super() }} -->
+    {{ super() }}
     <!-- Custom CSS to make the charts taller -->
+
+    <!-- Sets the browser tab title for the homepage -->
+    
     <style>
         /* Defines a fixed height for large chart containers */
         .chart-lg-height {

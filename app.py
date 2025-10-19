@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-import utils
+import dash
 
 #declare flask app
 app = Flask(__name__)
@@ -13,7 +13,7 @@ def home():
 @app.route('/FI_Dashboard')
 def fi_dashboard():
 
-    curve_labels, curve_dates, curve_yields, summary_data = utils.get_banxico_data() 
+    curve_labels, curve_dates, curve_yields, summary_data = dash.get_banxico_data() 
         
     return render_template(
         'dashboard.html', 
