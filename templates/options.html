@@ -1,11 +1,184 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page Title -->
+    <title>Options Pricing</title>
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Bootstrap JS Bundle for dropdown functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <style>
+        /* Custom styles for the new sidebar list items */
+        .list-group-item-action:hover {
+            background-color: #f8f9fa; /* Lighter hover for contrast */
+            color: #0d6efd; /* Primary color on hover */
+        }
+        
+        /* Ensure the body takes up the full viewport height and pads for the fixed footer */
+        body {
+            padding-bottom: 5rem; /* Add padding equivalent to footer height */
+        }
+        footer {
+            height: 5rem; /* Explicit height for footer */
+        }
 
-<!-- Sets the browser tab title for the homepage -->
-{% block title %}Fixed Income Dashboard{% endblock %}
+        /* Ensure the main content uses full height available between fixed navbar and footer */
+        .full-height-content {
+            min-height: calc(100vh - 56px - 5rem); /* 100vh - navbar height (approx 56px) - footer height (5rem) */
+        }
 
-<!-- Fills the main content area (inside the <main> tag) -->
-{% block content %}
-    <div class="p-5 mb-4 bg-light rounded-3 shadow-lg">
-        Options Pricer Coming Soon!
-    </div>
-{% endblock %}
+        /* Add padding to the main content area to clear the fixed navbar */
+        .main-content-area {
+            padding-top: 4.5rem !important; /* Adjusted top padding to clear the navbar */
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+
+        /* Styling for the list group items */
+        .lh-tight {
+            line-height: 1.25;
+        }
+
+        /* For the scrollable list area in the sidebar */
+        .scrollarea {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<!-- Use d-flex and min-vh-100 to enable sticky footer behavior (before fixed-bottom) -->
+<body class="bg-light min-vh-100 d-flex flex-column">
+
+    <!-- Bootstrap Navbar - Common Navigation Structure -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <!-- Home Button (Top Left) -->
+            <a class="navbar-brand" href="/">Home</a>
+            
+            <!-- Three-striped Menu Dropdown Button (Top Right) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <!-- ms-auto pushes the menu items to the right -->
+                <ul class="navbar-nav ms-auto"> 
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Menu
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownMenuLink">
+                            <li><a class="dropdown-item" href="/FI_Dashboard">FI Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/Options_Pricer">Options Pricer</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area: d-flex to align sidebar and content, flex-grow-1 for full height -->
+    <main class="d-flex flex-grow-1 full-height-content">
+        
+        <!-- LEFT SIDEBAR: Full Height, Flush Left -->
+        <!-- The shadow and fixed width are applied here. It is flush left because the main tag has no container class. -->
+        <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white shadow-lg" style="width: 300px;">
+            <!-- Header (from user's content) -->
+            <a href="/" class="d-flex align-items-center flex-shrink-0 p-3 link-dark text-decoration-none border-bottom">
+                <!-- This SVG reference is kept as provided in the user's template block -->
+                <svg class="bi me-2" width="30" height="24"><use xlink:href="#bootstrap"></use></svg> 
+                <span class="fs-5 fw-semibold">Options Pricing</span>
+            </a>
+            
+            <!-- Menu Items (Scrollable and takes up remaining vertical space) -->
+            <div class="list-group list-group-flush border-bottom scrollarea flex-grow-1 overflow-auto">
+                <a href="#" class="list-group-item list-group-item-action active py-3 lh-tight" aria-current="true">
+                    <div class="d-flex w-100 align-items-center justify-content-between">
+                        <strong class="mb-1">Black-Scholes</strong>
+                        <small>Wed</small>
+                    </div>
+                    <div class="col-10 mb-1 small">Analytical solution for European options.</div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight">
+                    <div class="d-flex w-100 align-items-center justify-content-between">
+                        <strong class="mb-1">Finite Difference Methods</strong>
+                        <small class="text-muted">Tues</small>
+                    </div>
+                    <div class="col-10 mb-1 small">Grid-based numerical solution of the PDE.</div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight">
+                    <div class="d-flex w-100 align-items-center justify-content-between">
+                        <strong class="mb-1">Machine Learning</strong>
+                        <small class="text-muted">Mon</small>
+                    </div>
+                    <div class="col-10 mb-1 small">Using neural networks for fast, complex pricing.</div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight" aria-current="true">
+                    <div class="d-flex w-100 align-items-center justify-content-between">
+                        <strong class="mb-1">Fourier Transforms</strong>
+                        <small class="text-muted">Wed</small>
+                    </div>
+                    <div class="col-10 mb-1 small">For characteristic function-based models (e.g., Heston).</div>
+                </a>
+                <!-- Adding extra dummy items to show scrollability and full-height stretching -->
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight"><div class="d-flex w-100 align-items-center justify-content-between"><strong class="mb-1">Monte Carlo</strong></div><div class="col-10 mb-1 small">Path-dependent option valuation.</div></a>
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight"><div class="d-flex w-100 align-items-center justify-content-between"><strong class="mb-1">Binomial Tree</strong></div><div class="col-10 mb-1 small">Simple lattice approach for American options.</div></a>
+                <a href="#" class="list-group-item list-group-item-action py-3 lh-tight"><div class="d-flex w-100 align-items-center justify-content-between"><strong class="mb-1">Implied Volatility</strong></div><div class="col-10 mb-1 small">Calculation and surface analysis.</div></a>
+            </div>
+        </div>
+        
+        <!-- MAIN CONTENT AREA: Takes remaining width, applies top padding to clear fixed navbar -->
+        <div class="flex-grow-1 main-content-area">
+            <!-- Content is placed in a container for horizontal margins/centering within the available space -->
+            <div class="container-fluid">
+                <div class="card shadow p-4 border-0 rounded-3">
+                    <h1 class="text-dark border-bottom pb-2 mb-4">Options Pricer: Select a Model</h1>
+                    
+                    <p class="lead text-secondary">
+                        Welcome to the Options Pricer interface. Please use the **Valuation Methods** menu on the left to select a methodology to begin working with the tool.
+                    </p>
+                    <div class="alert alert-info mt-3" role="alert">
+                        <strong>Tip:</strong> Selecting a method will load its corresponding input form and calculation interface in this area.
+                    </div>
+                    <ul class="list-unstyled mt-4 text-muted">
+                        <li>The **Black-Scholes** model provides a closed-form analytical solution.</li>
+                        <li>**Finite Difference Methods** use numerical techniques to solve the Black-Scholes PDE.</li>
+                        <li>**Machine Learning** approaches leverage AI for fast, non-parametric pricing.</li>
+                        <li>**Fourier Transforms** (e.g., Carr-Madan) are ideal for models with non-Gaussian characteristics.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Fixed Footer: Uses fixed-bottom to lock the position -->
+    <footer class="bg-dark text-white text-center fixed-bottom py-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <!-- Attribution & Data Source -->
+            <small class="text-white-50">
+                Data sourced via <a href="https://www.banxico.org.mx/SieAPIRest/service/v" class="text-white-50 text-decoration-none" target="_blank">Banxico API</a>. Tools built by Miguel Rodriguez.
+                
+            </small>
+
+            <div>
+                <!-- GitHub Link -->
+                <a href="https://github.com/mrodrigue3425" target="_blank" class="text-white-50 me-3" aria-label="GitHub Profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2-.01.21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                </a>
+                <!-- LinkedIn Link -->
+                <a href="https://www.linkedin.com/in/mrodrigue3425" target="_blank" class="text-white-50" aria-label="LinkedIn Profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-linkedin" viewBox="0 0 16 16">
+                        <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854zm4.943 12.248V6.169H2.542v7.225zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248S2.4 3.226 2.4 3.934c0 .694.521 1.248 1.327 1.248zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016l.016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
