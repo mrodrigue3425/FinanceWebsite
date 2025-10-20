@@ -7,7 +7,7 @@ from flask import jsonify
 # load environment variables from .env file
 load_dotenv()
 banxico_api_key = os.getenv('BANXICO_API_KEY')
-
+#test
 def get_banxico_data():
     # Logic to fetch and return data from Banxico using the API key
     CETES_MATURITY_MAP = {
