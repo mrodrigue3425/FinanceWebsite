@@ -1,2 +1,5 @@
 .env
 __pycache__
+experiment.ipynb
+.flaskenv
+TODO.md
