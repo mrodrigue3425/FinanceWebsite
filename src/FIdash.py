@@ -2,10 +2,14 @@ from dotenv import load_dotenv
 import os
 import requests
 from flask import Flask
+import logging
 
 
 # load environment variables from .env file
 load_dotenv()
+
+# set up the logger for this module
+logger = logging.getLogger(__name__) 
 
 class BanxicoDataFetcher():
 
@@ -30,9 +34,14 @@ class BanxicoDataFetcher():
 
     def __init__(self):
 
+        logger.debug("Initialising BanxicoDataFetcher.")
+
         self.api_key = os.getenv('BANXICO_API_KEY')
         if not self.api_key:
+            logger.critical("BANXICO_API_KEY is missing. Cannot proceed with API calls.")
             raise ValueError("BANXICO_API_KEY not found in environment variables.")
+        
+        logger.debug("Successfuly read Banxico API key.")
         
         self.session = requests.Session()
         self.session.headers = {
@@ -47,6 +56,8 @@ class BanxicoDataFetcher():
 
     def get_data(self):
 
+        logger.debug("BanxicoDataFetcher: fetching data.")
+
         banxico_data = self.call_api()
 
         reordered_cetes_data = self.reorder_cetes_data(banxico_data["cetes"])
@@ -58,12 +69,19 @@ class BanxicoDataFetcher():
         return curve_labels, curve_dates, curve_yields, parsed_summary_data
        
     def call_api(self):  
-
+        
+   
         # make the API request
+        logger.debug("Fetching cetes data.")
         cetes_response = self.session.get(self.api_url_cetes, headers=self.session.headers, timeout=10)
+        if cetes_response.status_code != 200:
+             logger.critical(f"Error acquiring cetes data: {cetes_response.status_code}")
         cetes_response.raise_for_status()
 
+        logger.debug("Fetching summary data.")
         summary_response = self.session.get(self.api_url_summary, headers=self.session.headers, timeout=10)
+        if summary_response.status_code != 200:
+            logger.critical(f"Error acquiring summary data: {summary_response.status_code}")
         summary_response.raise_for_status()
 
                 
@@ -79,6 +97,7 @@ class BanxicoDataFetcher():
             
     def reorder_cetes_data(self, cetes_response_data):
             
+            logger.debug("Reordering cetes data.")
             
             returned_maturities = [self.CETES_MATURITY_MAP.get(y.get("idSerie")) for y in cetes_response_data]
 
@@ -97,6 +116,7 @@ class BanxicoDataFetcher():
             maturity_ranks = [x[0] for x in sorted(list(enumerate(mat_in_days)),key=lambda x: x[1])]
             
             ordered_cetes_data = [cetes_response_data[x] for x in maturity_ranks]
+        
 
             return ordered_cetes_data
 

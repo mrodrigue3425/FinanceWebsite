@@ -8,8 +8,8 @@ import requests
 # --- Preliminary Tasks ---
 
 # set up the logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', stream=sys.stderr)
-logger = logging.getLogger(__name__) # Get a logger instance for this module
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s', stream=sys.stderr)
+logger = logging.getLogger(__name__) 
 
 # declare project root and template path
 current_dir = os.path.abspath(os.path.dirname(__file__))
@@ -21,15 +21,14 @@ template_path = os.path.join(project_root, 'templates')
 # instantiate the data fetcher object only once when the application starts
 try:
     banxico_data_fetcher = FIdash.BanxicoDataFetcher()
-    logger.info("Banxico Data Fetcher intialised successfuly.")
+    logger.info("BanxicoDataFetcher: intialised successfuly.")
 except ValueError as e:
-    # handle the critical error if the API key is missing during initialisation
-    logger.critical("Banxico API initialisation: could not find API key in environment variables.")
+    # handle the error if the API key is missing during initialisation
     logger.exception(e)
     banxico_data_fetcher = None 
 except Exception as e:
     # handle unexpected intialisation error
-    logger.critical("Banxico API initialisation: unexpected error.")
+    logger.critical("BanxicoDataFetcher: unexpected error.")
     logger.exception(e) 
     banxico_data_fetcher = None
 
@@ -64,14 +63,13 @@ def fi_dashboard():
         # connection errors
         logger.error("Network or timeout error fetching data from Banxico API.")
         logger.exception(e)
-        error_data = {"message": "Connection failed. This could be due to an issue with the Banxico API or a network issue.",
+        error_data = {"message": "Connection failed. This could be due to an issue with the Banxico API or your network.",
                 "code": 504,
                 "reason": "Gateway Timeout"}
         return handle_error(error_data)
     
     except requests.exceptions.HTTPError as e:
         # request and response errors
-        logger.error("Error fetching data from Banxico API during dashboard rendering.")
         logger.exception(e)
 
         status_code = getattr(e.response, 'status_code', 503)
@@ -85,13 +83,13 @@ def fi_dashboard():
     
     except Exception as e:
         # other errors
-        logger.critical("UNEXPECTED Local Error during dashboard rendering.")
+        logger.critical("Unexpected error during dashboard rendering.")
         logger.exception(e)
         
         status_code = 500
         reason = "Internal Server Error"
         
-        error_data = {"message": f"An unexpected local processing error occurred: {str(e)}.",
+        error_data = {"message": f"An unexpected  error occurred.",
                 "code": status_code,
                 "reason": reason}
         
