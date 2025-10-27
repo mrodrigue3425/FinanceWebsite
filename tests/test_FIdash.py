@@ -1,7 +1,8 @@
-from src import FIdash
+
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from src import FIdash
 
 def test_banxico_data_initialization():
     test_object = FIdash.BanxicoDataFetcher()
@@ -10,9 +11,10 @@ def test_banxico_data_initialization():
 def test_call_api():
     test_object = FIdash.BanxicoDataFetcher()
     test_data = test_object.call_api()
+    assert all([y in test_object.CETES_MATURITY_MAP.keys() for y in [x["idSerie"] for x in test_data["cetes"]]])
+    assert all([y in test_object.SUMMARY_MAP.keys() for y in [x["idSerie"] for x in test_data["summary"]]])
     assert all([isinstance(float(x["datos"][0]["dato"]),float) for x in test_data["cetes"]])
     assert all([isinstance(float(x["datos"][0]["dato"]),float)  for x in test_data["summary"]])
-
 
 def test_reorder_cetes_data():
     test_object = FIdash.BanxicoDataFetcher()
@@ -82,4 +84,7 @@ def test_get_labels_dates_yields():
             assert isinstance(parsed_date, datetime)        
         except ValueError:
             assert False, f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+# if __name__ == '__main__':
+#     pytest.main(["tests/test_FIdash.py"])
         
