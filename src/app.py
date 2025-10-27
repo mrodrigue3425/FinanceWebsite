@@ -5,6 +5,8 @@ import FIdash
 import logging
 import requests
 
+# --- Preliminary Tasks ---
+
 # set up the logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', stream=sys.stderr)
 logger = logging.getLogger(__name__) # Get a logger instance for this module
@@ -13,6 +15,8 @@ logger = logging.getLogger(__name__) # Get a logger instance for this module
 current_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.dirname(current_dir)
 template_path = os.path.join(project_root, 'templates')
+
+# --- Initialisations ---
 
 # instantiate the data fetcher object only once when the application starts
 try:
@@ -34,6 +38,8 @@ app = Flask(
     __name__, 
     template_folder=template_path 
 )
+
+# --- Routes ---
 
 # home page route
 @app.route('/')
@@ -103,6 +109,8 @@ def fi_dashboard():
 @app.route('/options_pricing')
 def options_pricer():
     return render_template('options_pricing.html')
+
+# --- Error Handling ---
 
 @app.errorhandler(404)
 def not_found_error(e):
