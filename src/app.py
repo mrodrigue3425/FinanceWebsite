@@ -1,7 +1,8 @@
 from flask import Flask, render_template
+from . import FIdash
 import os
 import sys
-import FIdash
+
 import logging
 import requests
 
