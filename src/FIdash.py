@@ -51,8 +51,8 @@ class BanxicoDataFetcher():
 
         self.cetes_series_ids = ",".join(self.CETES_MATURITY_MAP.keys())
         self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
-        self.api_url_cetes = self.api_url + f"{self.cetes_series_ids}/datos/oportuno"
-        self.api_url_summary = self.api_url + f"{self.summary_ids}/datos/oportuno"
+        self.api_url_cetes = self.api_url + f"{self.cetes_series_ids}/datos/oportuno?decimales=sinCeros"
+        self.api_url_summary = self.api_url + f"{self.summary_ids}/datos/oportuno?decimales=sinCeros"
 
     def get_data(self):
 
