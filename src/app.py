@@ -44,6 +44,7 @@ app = Flask(
 # home page route
 @app.route('/')
 def home():
+    logger.debug("Rendering home page.")
     return render_template('index.html')
 
 # fixed income dashboard route
@@ -96,6 +97,7 @@ def fi_dashboard():
         
         return handle_error(error_data)
     
+    logger.debug("Rendering dashboard.")
     return render_template(
         'dashboard.html', 
         curve_labels=curve_labels,
@@ -107,6 +109,7 @@ def fi_dashboard():
 # options pricer route
 @app.route('/options_pricing')
 def options_pricer():
+    logger.debug("Rendering options pricing.")
     return render_template('options_pricing.html')
 
 # --- Error Handling ---
@@ -142,7 +145,8 @@ def handle_error(error_data):
 
     if not isinstance(status_code, int) or status_code < 400 or status_code > 599:
         status_code = 500
-        
+
+    logger.debug("Rendering error page.")    
     return render_template(
         'error.html',
         error_data=error_data
