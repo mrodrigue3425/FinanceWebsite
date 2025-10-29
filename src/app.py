@@ -103,7 +103,7 @@ def fi_dashboard():
         reason = "Internal Server Error"
 
         error_data = {
-            "message": "An unexpected error occurred.",
+            "message": f"An unexpected error occurred.",
             "code": status_code,
             "reason": reason,
         }
