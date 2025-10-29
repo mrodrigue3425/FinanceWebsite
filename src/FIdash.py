@@ -15,12 +15,20 @@ logger = logging.getLogger(__name__)
 class BanxicoDataFetcher:
 
     # cetes data Banxico API series ids
-    CETES_MATURITY_MAP = {
+    CETES_MATURITY_MAP_YLD = {
         "SF45470": "28 Days",
         "SF45471": "91 Days",
         "SF45472": "182 Days",
         "SF45473": "364 Days",
         "SF349889": "2 Years",
+    }
+
+    CETES_MATURITY_MAP_DTM = {
+        "SF45422": "28 Days",
+        "SF45423": "91 Days",
+        "SF45424": "182 Days",
+        "SF45425": "364 Days",
+        "SF349886": "2 Years",
     }
 
     # mbono data Banxico API series ids
@@ -76,7 +84,7 @@ class BanxicoDataFetcher:
         self.session = requests.Session()
         self.session.headers = {"Bmx-Token": self.api_key, "Accept": "application/json"}
 
-        self.cetes_series_ids = ",".join(self.CETES_MATURITY_MAP.keys())
+        self.cetes_series_ids = ",".join(self.CETES_MATURITY_MAP_YLD.keys())
         self.mbonos_px_ids = ",".join(self.MBONOS_MATURITY_MAP_PX.keys())
         self.mbonos_dtm_ids = ",".join(self.MBONOS_MATURITY_MAP_DTM.keys())
         self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
@@ -165,7 +173,7 @@ class BanxicoDataFetcher:
         logger.debug("Reordering cetes data.")
 
         returned_maturities = [
-            self.CETES_MATURITY_MAP.get(y.get("idSerie")) for y in cetes_response_data
+            self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in cetes_response_data
         ]
 
         def convert_to_days(maturity_str):
@@ -208,7 +216,7 @@ class BanxicoDataFetcher:
         curve_yields = []
 
         for tenor in curve_reordered:
-            curve_labels.append(self.CETES_MATURITY_MAP.get(tenor.get("idSerie")))
+            curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")))
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(round(float(tenor.get("datos")[0].get("dato")), 6))
 
