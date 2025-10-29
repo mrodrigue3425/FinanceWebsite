@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class BanxicoDataFetcher:
 
+    # cetes data Banxico API series ids
     CETES_MATURITY_MAP = {
         "SF45470": "28 Days",
         "SF45471": "91 Days",
@@ -22,6 +23,7 @@ class BanxicoDataFetcher:
         "SF349889": "2 Years",
     }
 
+    # mbono data Banxico API series ids
     MBONOS_MATURITY_MAP_PX = {
         "SF45449": "3 Years",
         "SF45451": "5 Years",
@@ -38,6 +40,15 @@ class BanxicoDataFetcher:
         "SF60720": "30 Years",
     }
 
+    MBONOS_MATURITY_MAP_COUP = {
+        "SF45475": "3 Years",
+        "SF45476": "5 Years",
+        "SF45478": "10 Years",
+        "SF45479": "20 Years",
+        "SF60723": "30 Years",
+    }
+
+    # summary data Banxico API series ids
     SUMMARY_MAP = {
         "SF331451": "TIIEF",
         "SF43783": "TIIE28",
