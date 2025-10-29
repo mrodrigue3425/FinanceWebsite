@@ -22,6 +22,24 @@ class BanxicoDataFetcher:
         "SF349889": "2 Years",
     }
 
+    MBONOS_MATURITY_MAP_PX = {
+        "SF45449": "3 Years",
+        "SF45451": "5 Years",
+        "SF45453": "7 Years",
+        "SF45455": "10 Years",
+        "SF45457": "20 Years",
+        "SF60722": "30 Years",
+    }
+
+    MBONOS_MATURITY_MAP_DTM = {
+        "SF45427": "3 Years",
+        "SF45428": "5 Years",
+        "SF45429": "7 Years",
+        "SF45430": "10 Years",
+        "SF45431": "20 Years",
+        "SF60720": "30 Years",
+    }
+
     SUMMARY_MAP = {
         "SF331451": "TIIEF",
         "SF43783": "TIIE28",
