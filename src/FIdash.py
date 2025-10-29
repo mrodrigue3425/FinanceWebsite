@@ -13,8 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 class BanxicoDataFetcher:
+    """
+        Fetches data from Banxico SIE API.
 
-    # cetes data Banxico API series ids
+        See https://www.banxico.org.mx/SieAPIRest/service/v1/
+    """
+    # --- cetes data Banxico API series ids ---
+
+    # cetes yields
     CETES_MATURITY_MAP_YLD = {
         "SF45470": "28 Days",
         "SF45471": "91 Days",
@@ -23,6 +29,7 @@ class BanxicoDataFetcher:
         "SF349889": "2 Years",
     }
 
+    # cetes days to maturity
     CETES_MATURITY_MAP_DTM = {
         "SF45422": "28 Days",
         "SF45423": "91 Days",
@@ -31,7 +38,9 @@ class BanxicoDataFetcher:
         "SF349886": "2 Years",
     }
 
-    # mbono data Banxico API series ids
+    # --- mbono data Banxico API series ids ---
+
+    # mbono dirty prices
     MBONOS_MATURITY_MAP_PX = {
         "SF45449": "3 Years",
         "SF45451": "5 Years",
@@ -40,6 +49,7 @@ class BanxicoDataFetcher:
         "SF60722": "30 Years",
     }
 
+    # mbono days to maturity
     MBONOS_MATURITY_MAP_DTM = {
         "SF45427": "3 Years",
         "SF45428": "5 Years",
@@ -48,6 +58,7 @@ class BanxicoDataFetcher:
         "SF60720": "30 Years",
     }
 
+    # mbono current coupons
     MBONOS_MATURITY_MAP_COUP = {
         "SF45475": "3 Years",
         "SF45476": "5 Years",
@@ -56,7 +67,8 @@ class BanxicoDataFetcher:
         "SF60723": "30 Years",
     }
 
-    # summary data Banxico API series ids
+    # --- summary data Banxico API series ids ---
+
     SUMMARY_MAP = {
         "SF331451": "TIIEF",
         "SF43783": "TIIE28",
@@ -73,6 +85,8 @@ class BanxicoDataFetcher:
         logger.debug("Initialising BanxicoDataFetcher.")
 
         self.api_key = os.getenv("BANXICO_API_KEY")
+
+        # check if Banxico API key in environment variables
         if not self.api_key:
             logger.critical(
                 "BANXICO_API_KEY is missing. Cannot proceed with API calls."
@@ -84,20 +98,42 @@ class BanxicoDataFetcher:
         self.session = requests.Session()
         self.session.headers = {"Bmx-Token": self.api_key, "Accept": "application/json"}
 
-        self.cetes_series_ids = ",".join(self.CETES_MATURITY_MAP_YLD.keys())
+        # --- define class variable series ids ---
+
+        # cetes
+        self.cetes_yld_ids = ",".join(self.CETES_MATURITY_MAP_YLD.keys())
+        self.cetes_dtm_ids = ",".join(self.CETES_MATURITY_MAP_DTM.keys())
+
+        # mbonos
         self.mbonos_px_ids = ",".join(self.MBONOS_MATURITY_MAP_PX.keys())
         self.mbonos_dtm_ids = ",".join(self.MBONOS_MATURITY_MAP_DTM.keys())
+        self.mbonos_coup_ids = ",".join(self.MBONOS_MATURITY_MAP_COUP.keys())
+
+        # summary data
         self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
 
-        self.api_url_cetes = (
-            self.api_url + f"{self.cetes_series_ids}/datos/oportuno?decimales=sinCeros"
+        # --- define class variable API query URLs ---
+
+        # cetes
+        self.api_url_cetes_yld = (
+            self.api_url + f"{self.cetes_yld_ids}/datos/oportuno?decimales=sinCeros"
         )
+        self.api_url_cetes_dtm = (
+            self.api_url + f"{self.cetes_dtm_ids}/datos/oportuno?decimales=sinCeros"
+        )
+
+        # mbonos
         self.api_url_m_px = (
             self.api_url + f"{self.mbonos_px_ids}/datos/oportuno?decimales=sinCeros"
         )
         self.api_url_m_dtm = (
             self.api_url + f"{self.mbonos_dtm_ids}/datos/oportuno?decimales=sinCeros"
         )
+        self.api_url_m_coup = (
+            self.api_url + f"{self.mbonos_coup_ids}/datos/oportuno?decimales=sinCeros"
+        )
+
+        # summary data
         self.api_url_summary = (
             self.api_url + f"{self.summary_ids}/datos/oportuno?decimales=sinCeros"
         )
@@ -223,7 +259,7 @@ class BanxicoDataFetcher:
         return curve_labels, curve_dates, curve_yields
 
     def __repr__(self):
-        return f"<BanxicoData(cetes_series_ids={self.cetes_series_ids}, summary_ids={self.summary_ids})>"
+        return f"<BanxicoData(cetes_yld_ids={self.cetes_yld_ids}, summary_ids={self.summary_ids})>"
 
 
 if __name__ == "__main__":
