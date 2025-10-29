@@ -155,15 +155,26 @@ class BanxicoDataFetcher:
 
     def call_api(self):
 
-        # make the API request
-        logger.debug("Fetching cetes yield data.")
-        cetes_response = self.session.get(
-            self.api_url_cetes, headers=self.session.headers, timeout=10
-        )
-        if cetes_response.status_code != 200:
-            logger.critical(f"Error acquiring cetes yield data: {cetes_response.status_code}")
-        cetes_response.raise_for_status()
+        # --- make the API requests ---
 
+        # cetes
+        logger.debug("Fetching cetes yield data.")
+        cetes_response_yld = self.session.get(
+            self.api_url_cetes_yld, headers=self.session.headers, timeout=10
+        )
+        if cetes_response_yld.status_code != 200:
+            logger.critical(f"Error acquiring cetes yield data: {cetes_response_yld.status_code}")
+        cetes_response_yld.raise_for_status()
+        
+        logger.debug("Fetching cetes days do maturity data.")
+        cetes_response_dtm = self.session.get(
+            self.api_url_cetes_dtm, headers=self.session.headers, timeout=10
+        )
+        if cetes_response_dtm.status_code != 200:
+            logger.critical(f"Error acquiring cetes yield data: {cetes_response_dtm.status_code}")
+        cetes_response_dtm.raise_for_status()
+
+        # mbonos
         logger.debug("Fetching mbonos price data.")
         mbonos_response_px = self.session.get(
             self.api_url_m_px, headers=self.session.headers, timeout=10
@@ -177,9 +188,18 @@ class BanxicoDataFetcher:
             self.api_url_m_dtm, headers=self.session.headers, timeout=10
         )
         if mbonos_response_dtm.status_code != 200:
-            logger.critical(f"Error acquiring cetes data: {mbonos_response_dtm.status_code}")
+            logger.critical(f"Error acquiring mbono dtm data: {mbonos_response_dtm.status_code}")
         mbonos_response_dtm.raise_for_status()
 
+        logger.debug("Fetching mbonos current coupon data.")
+        mbonos_response_coup = self.session.get(
+            self.api_url_m_coup, headers=self.session.headers, timeout=10
+        )
+        if mbonos_response_coup.status_code != 200:
+            logger.critical(f"Error acquiring mbono current coupon data: {mbonos_response_coup.status_code}")
+        mbonos_response_coup.raise_for_status()
+
+        # summary data
         logger.debug("Fetching summary data.")
         summary_response = self.session.get(
             self.api_url_summary, headers=self.session.headers, timeout=10
@@ -190,15 +210,26 @@ class BanxicoDataFetcher:
             )
         summary_response.raise_for_status()
 
-        cetes_response_json = cetes_response.json()["bmx"]["series"]
+        # --- parse responses ---
+
+        #cetes
+        cetes_yld_response_json = cetes_response_yld.json()["bmx"]["series"]
+        cetes_dtm_response_json = cetes_response_dtm.json()["bmx"]["series"]
+
+        # mbonos
         m_px_response_json = mbonos_response_px.json()["bmx"]["series"]
         m_dtm_response_json = mbonos_response_dtm.json()["bmx"]["series"]
+        m_coup_response_json = mbonos_response_coup.json()["bmx"]["series"]
+
+        # summary data
         summary_response_json = summary_response.json()["bmx"]["series"]
 
         returned_data = {
-            "cetes": cetes_response_json,
+            "cetes_yld": cetes_yld_response_json,
+            "cetes_dtm": cetes_dtm_response_json,
             "mbonos_px": m_px_response_json,
             "mbonos_dtm": m_dtm_response_json,
+            "mbonos_coup": m_coup_response_json,
             "summary": summary_response_json,
             }
 
