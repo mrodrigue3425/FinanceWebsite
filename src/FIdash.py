@@ -68,14 +68,23 @@ class BanxicoDataFetcher:
         self.session.headers = {"Bmx-Token": self.api_key, "Accept": "application/json"}
 
         self.cetes_series_ids = ",".join(self.CETES_MATURITY_MAP.keys())
+        self.mbonos_px_ids = ",".join(self.MBONOS_MATURITY_MAP_PX.keys())
+        self.mbonos_dtm_ids = ",".join(self.MBONOS_MATURITY_MAP_DTM.keys())
         self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
+
         self.api_url_cetes = (
             self.api_url + f"{self.cetes_series_ids}/datos/oportuno?decimales=sinCeros"
+        )
+        self.api_url_m_px = (
+            self.api_url + f"{self.mbonos_px_ids}/datos/oportuno?decimales=sinCeros"
+        )
+        self.api_url_m_dtm = (
+            self.api_url + f"{self.mbonos_dtm_ids}/datos/oportuno?decimales=sinCeros"
         )
         self.api_url_summary = (
             self.api_url + f"{self.summary_ids}/datos/oportuno?decimales=sinCeros"
         )
-
+        
     def get_data(self):
 
         logger.debug("BanxicoDataFetcher: fetching data.")
