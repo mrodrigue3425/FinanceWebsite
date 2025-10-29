@@ -171,7 +171,7 @@ class BanxicoDataFetcher:
             self.api_url_cetes_dtm, headers=self.session.headers, timeout=10
         )
         if cetes_response_dtm.status_code != 200:
-            logger.critical(f"Error acquiring cetes yield data: {cetes_response_dtm.status_code}")
+            logger.critical(f"Error acquiring cetes dtm data: {cetes_response_dtm.status_code}")
         cetes_response_dtm.raise_for_status()
 
         # mbonos
@@ -235,12 +235,16 @@ class BanxicoDataFetcher:
 
         return returned_data
 
-    def reorder_cetes_data(self, cetes_response_data):
+    def reorder_cetes_data(self, cetes_yld_response_data, cetes_dtm_response_data):
 
-        logger.debug("Reordering cetes data.")
+        logger.debug("Reordering cetes yield data.")
 
-        returned_maturities = [
-            self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in cetes_response_data
+        returned_yld_maturities = [
+            self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in cetes_yld_response_data
+        ]
+
+        returned_dtm_maturities = [
+            self.CETES_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in cetes_dtm_response_data
         ]
 
         def convert_to_days(maturity_str):
@@ -253,15 +257,20 @@ class BanxicoDataFetcher:
                 raise ValueError(f"Unknown maturity format: {maturity_str}")
 
         # define the desired order
-        mat_in_days = [convert_to_days(mat) for mat in returned_maturities]
+        mat_in_days_yld = [convert_to_days(mat) for mat in returned_yld_maturities]
+        mat_in_days_dtm = [convert_to_days(mat) for mat in returned_dtm_maturities]
 
-        maturity_ranks = [
-            x[0] for x in sorted(list(enumerate(mat_in_days)), key=lambda x: x[1])
+        maturity_ranks_yld = [
+            x[0] for x in sorted(list(enumerate(mat_in_days_yld)), key=lambda x: x[1])
+        ]
+        maturity_ranks_dtm = [
+            x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
         ]
 
-        ordered_cetes_data = [cetes_response_data[x] for x in maturity_ranks]
+        ordered_cetes_data_yld = [cetes_yld_response_data[x] for x in maturity_ranks_yld]
+        ordered_cetes_data_dtm = [cetes_dtm_response_data[x] for x in maturity_ranks_dtm]
 
-        return ordered_cetes_data
+        return ordered_cetes_data_yld, ordered_cetes_data_dtm
 
     def parse_summary_data(self, summary_response_data):
 
