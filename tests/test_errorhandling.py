@@ -1,5 +1,4 @@
 import pytest
-import os
 import requests
 
 # Import the main Flask app instance and the real DataFetcher class
