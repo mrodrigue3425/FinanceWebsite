@@ -235,17 +235,7 @@ class BanxicoDataFetcher:
 
         return returned_data
 
-    def reorder_cetes_data(self, cetes_yld_response_data, cetes_dtm_response_data):
-
-        logger.debug("Reordering cetes yield data.")
-
-        returned_yld_maturities = [
-            self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in cetes_yld_response_data
-        ]
-
-        returned_dtm_maturities = [
-            self.CETES_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in cetes_dtm_response_data
-        ]
+    def reorder_data(self, yld_px_response_data, dtm_response_data, coup_response_data = None):
 
         def convert_to_days(maturity_str):
             parts = maturity_str.split(" ")
@@ -256,21 +246,77 @@ class BanxicoDataFetcher:
             else:
                 raise ValueError(f"Unknown maturity format: {maturity_str}")
 
-        # define the desired order
-        mat_in_days_yld = [convert_to_days(mat) for mat in returned_yld_maturities]
-        mat_in_days_dtm = [convert_to_days(mat) for mat in returned_dtm_maturities]
+        def reorder_cetes(yld_response_data, dtm_response_data):
+            returned_yld_maturities = [
+                self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in yld_response_data
+            ]
 
-        maturity_ranks_yld = [
-            x[0] for x in sorted(list(enumerate(mat_in_days_yld)), key=lambda x: x[1])
-        ]
-        maturity_ranks_dtm = [
-            x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
-        ]
+            returned_dtm_maturities = [
+                self.CETES_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in dtm_response_data
+            ]
 
-        ordered_cetes_data_yld = [cetes_yld_response_data[x] for x in maturity_ranks_yld]
-        ordered_cetes_data_dtm = [cetes_dtm_response_data[x] for x in maturity_ranks_dtm]
+            # define the desired order
+            mat_in_days_yld = [convert_to_days(mat) for mat in returned_yld_maturities]
+            mat_in_days_dtm = [convert_to_days(mat) for mat in returned_dtm_maturities]
 
-        return ordered_cetes_data_yld, ordered_cetes_data_dtm
+            # get ranks of returned data
+            maturity_ranks_yld = [
+                x[0] for x in sorted(list(enumerate(mat_in_days_yld)), key=lambda x: x[1])
+            ]
+            maturity_ranks_dtm = [
+                x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
+            ]
+
+            # reorder data
+            ordered_cetes_data_yld = [yld_response_data[x] for x in maturity_ranks_yld]
+            ordered_cetes_data_dtm = [dtm_response_data[x] for x in maturity_ranks_dtm]
+
+            return ordered_cetes_data_yld, ordered_cetes_data_dtm
+
+        def reorder_bonos(px_response_data, dtm_response_data, coup_response_data):
+            
+            returned_px_maturities = [
+                self.MBONOS_MATURITY_MAP_PX.get(y.get("idSerie")) for y in px_response_data
+            ]
+
+            returned_dtm_maturities = [
+                self.MBONOS_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in dtm_response_data
+            ]
+
+            returned_coup_maturities = [
+                self.MBONOS_MATURITY_MAP_COUP.get(y.get("idSerie")) for y in coup_response_data
+            ]
+
+            # define the desired order
+            mat_in_days_px = [convert_to_days(mat) for mat in returned_px_maturities]
+            mat_in_days_dtm = [convert_to_days(mat) for mat in returned_dtm_maturities]
+            mat_in_days_coup = [convert_to_days(mat) for mat in returned_coup_maturities]
+
+            # get ranks of returned data
+            maturity_ranks_px = [
+                x[0] for x in sorted(list(enumerate(mat_in_days_px)), key=lambda x: x[1])
+            ]
+            maturity_ranks_dtm = [
+                x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
+            ]
+            maturity_ranks_coup = [
+                x[0] for x in sorted(list(enumerate(mat_in_days_coup)), key=lambda x: x[1])
+            ]
+
+            # reorder data
+            ordered_bonos_data_px = [px_response_data[x] for x in maturity_ranks_px]
+            ordered_bonos_data_dtm = [dtm_response_data[x] for x in maturity_ranks_dtm]
+            ordered_bonos_data_coup = [coup_response_data[x] for x in maturity_ranks_coup]
+
+            return ordered_bonos_data_px, ordered_bonos_data_dtm, ordered_bonos_data_coup
+
+        if not coup_response_data:
+            logger.debug("Reordering cetes data.")
+            return reorder_cetes(yld_px_response_data, dtm_response_data)
+            
+        else:
+            logger.debug("Reordering bonos data.")
+            return reorder_bonos(yld_px_response_data, dtm_response_data, coup_response_data)
 
     def parse_summary_data(self, summary_response_data):
 
