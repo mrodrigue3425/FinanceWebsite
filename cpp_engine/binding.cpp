@@ -7,6 +7,6 @@ PYBIND11_MODULE(_cpp_engine, m) {
 
     m.doc() = "Pybind11 high-performance code for financial models."; 
 
-    m.def("say_hello", &FinancialEngine::say_hello, "A test function that returns a string and prints a message from C++.");
+    m.def("run", &PriceToYield::run, "Runs the price-to-yield calculation in C++.");
 }
 

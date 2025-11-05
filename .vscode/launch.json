@@ -46,25 +46,24 @@
             "justMyCode": true
         },
         {
-            "name": "C++: Debug cpp_engine/main",
+            "name": "Debug C++ run() via Python",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/cpp_engine/main",
-            "args": [],
-            "stopAtEntry": false, 
+            "program": "${command:python.interpreterPath}",  // path to your Python interpreter
+            "args": ["-c", "import cpp_engine; cpp_engine.run()"],  // calls your C++ entry function
+            "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
                 {
-                    "description": "Enable pretty printing for gdb",
+                    "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
             ],
-            "miDebuggerPath": "/usr/bin/gdb", 
-            "preLaunchTask": "Compile Debug Executable (C++) in cpp_engine"
+            "preLaunchTask": "Build C++ module"
         },
     ]
 }

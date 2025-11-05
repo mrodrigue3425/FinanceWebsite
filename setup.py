@@ -14,13 +14,13 @@ class build_ext(_build_ext):
 
     def build_extensions(self):
         if self.compiler.compiler_type == 'msvc':
-            cxx_std_flag = '/std=c++17'
+            cxx_std_flag = ["/std=c++17", "/Zi"] 
         else:
-            cxx_std_flag = '-std=c++17'   
+            cxx_std_flag = ["-std=c++17", "-g"]
 
         for ext in self.extensions:
             # add the appropriate C++17 flag
-            ext.extra_compile_args.append(cxx_std_flag)
+            ext.extra_compile_args.extend(cxx_std_flag)
         
         super().build_extensions()
 

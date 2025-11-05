@@ -14,3 +14,4 @@ cpp_engine/_cpp_engine*.so
 *.pyc
 .vscode/c_cpp_properties.json
 .vscode/settings.json
+.eggs

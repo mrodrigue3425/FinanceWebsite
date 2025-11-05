@@ -1,38 +1,33 @@
 {
     "version": "2.0.0",
     "tasks": [
-
         {
-            "label": "Compile Debug Executable (C++) in cpp_engine",
+            "label": "Build C++ module",
             "type": "shell",
-            "command": "g++",
-            "args": [
-                "-g",
-                "${file}",
-                "-o",
-                "${workspaceFolder}/cpp_engine/main"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/cpp_engine"
+            "command": "python setup.py build_ext",
+            "group": {
+                "kind": "build",
+                "isDefault": true
             },
-            "group": "build", 
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "presentation": {
                 "echo": true,
                 "reveal": "always",
                 "focus": false,
-                "panel": "dedicated", 
+                "panel": "dedicated",
                 "showReuseMessage": false,
                 "clear": false
-            },
-            "problemMatcher": "$gcc"
+            }
         },
         {
             "label": "Start Flask Server",
             "type": "shell",
             "command": "${command:python.interpreterPath}",
             "args": [
-                "-m",      
-                "flask",    
+                "-m",
+                "flask",
                 "run",
                 "--debug"
             ],
@@ -51,6 +46,25 @@
                 "reveal": "always",
                 "panel": "new"
             },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean C++ module",
+            "type": "shell",
+            "command": "rm -f cpp_engine/*.so && rm -rf build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build C++ module",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": ["setup.py", "build_ext", "--inplace"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Clean C++ module",
             "problemMatcher": []
         }
     ]
