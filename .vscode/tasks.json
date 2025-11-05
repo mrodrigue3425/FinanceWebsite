@@ -1,6 +1,31 @@
 {
     "version": "2.0.0",
     "tasks": [
+
+        {
+            "label": "Compile Debug Executable (C++) in cpp_engine",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/cpp_engine/main"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/cpp_engine"
+            },
+            "group": "build", 
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated", 
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
         {
             "label": "Start Flask Server",
             "type": "shell",
