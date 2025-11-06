@@ -3,13 +3,15 @@ __pycache__
 experiment.ipynb
 .flaskenv
 TODO.md
-cpp_engine/main
+cpp_engine/experiment
+cpp_engine/experiment.cpp
 /build/
 /dist/
 *.egg
 *.egg-info
 *.whl
 cpp_engine/_cpp_engine*.so
+cpp_engine/tests/test_price_to_yield
 *.pyd
 *.pyc
 .vscode/c_cpp_properties.json

@@ -66,6 +66,52 @@
             },
             "dependsOn": "Clean C++ module",
             "problemMatcher": []
+        },
+        {
+            "label": "Compile Experiment Executable (C++) in cpp_engine",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/cpp_engine/experiment"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/cpp_engine"
+            },
+            "group": "build", 
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated", 
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run cpp_engine tests",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "g++ -std=c++17 cpp_engine/tests/test_price_to_yield.cpp cpp_engine/price_to_yield.cpp -o cpp_engine/tests/test_price_to_yield -lgtest -lgtest_main -pthread && ./cpp_engine/tests/test_price_to_yield"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher": [],
+            "detail": "Builds and runs all GoogleTest-based C++ tests in cpp_engine."
         }
     ]
 }
