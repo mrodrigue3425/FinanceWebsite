@@ -42,11 +42,11 @@ class BanxicoDataFetcher:
 
     # mbono dirty prices
     MBONOS_MATURITY_MAP_PX = {
-        "SF45449": "3 Years",
-        "SF45451": "5 Years",
-        "SF45455": "10 Years",
-        "SF45457": "20 Years",
-        "SF60722": "30 Years",
+        "SF45448": "3 Years",
+        "SF45450": "5 Years",
+        "SF45454": "10 Years",
+        "SF45456": "20 Years",
+        "SF60721": "30 Years",
     }
 
     # mbono days to maturity
