@@ -17,3 +17,4 @@ cpp_engine/tests/test_price_to_yield
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 .eggs
+math.md
