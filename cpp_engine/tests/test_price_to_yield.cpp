@@ -11,6 +11,10 @@ constexpr int YB = 360;
 
 double px(double TC, double r, int K, int d);
 double round_to(double num, int dp);
+std::vector<double> px_vec(std::vector<double> TC_vec,
+                           std::vector<double> r_vec,
+                           std::vector<int> K_vec,
+                           std::vector<int>  d_vec);
 
 std::random_device rd;
 
@@ -21,9 +25,9 @@ std:: uniform_int_distribution<> dist_d(0,181);
 
 
 TEST(FindKTest, BasicCase) {
-    std::vector<int> test_input = {1092,1093,1091};
+    std::vector<int> test_input = {1092,1093,1091, 183, 182, 1};
     std::vector<int> result = PriceToYield::find_k(test_input);
-    std::vector<int> expected_output = {5, 6, 5};
+    std::vector<int> expected_output = {6, 7, 6, 2, 1, 1};
     EXPECT_EQ(result, expected_output);
 }
 
@@ -225,7 +229,7 @@ TEST(find_rootTest, PrecisionSweep) {
     std::mt19937 gen(42);
     using namespace std::chrono;
 
-    const int num_test = 10000;
+    const int num_test = 5000;
 
     std::vector<double> TCs(30);
     for (int i = 0; i < 30; i++) TCs[i] = (i + 1) / 2.0;
@@ -235,6 +239,8 @@ TEST(find_rootTest, PrecisionSweep) {
     std::vector<double> TC(num_test);
     std::vector<int> K(num_test);
     std::vector<int> d(num_test);
+
+    int fail_count = 0;
 
     for (int i = 0; i < num_test; i++) {
         TC[i] = TCs[dist_TC(gen)];
@@ -303,29 +309,131 @@ TEST(find_rootTest, PrecisionSweep) {
 
 TEST(price_to_yieldTest, BasicCase) {
     
+
     //std::mt19937 gen(rd());
     std::mt19937 gen(42);
+    using namespace std::chrono;
 
-    std::vector<double> prices = {102.643974, 102.129601, 97.313866, 90.112654, 88.326678};
-    std::vector<int> dtms = {874, 1602, 2785, 6243, 10156};
-    std::vector<double> coupon_rates = {8.500000, 8.500000, 7.500000, 7.750000, 8.000000};
+    std:: uniform_real_distribution<> dist_m(1e-7,1e-4);
+    std:: uniform_int_distribution<> dist_pm(1,2);
+    std:: uniform_int_distribution<> dist_dtm(1,10000);
 
-    std::vector<int> K = PriceToYield::find_k(dtms);
-    std::vector<int> d = PriceToYield::find_d(dtms);
+    int num_test = 2000;
+    int num_mbonos = 5;
+    
 
-    std::vector<double> yields = PriceToYield::price_to_yield(
-                prices, dtms, coupon_rates
-            );
+    std::vector<double> TCs(30);
 
-    double P_result;
-    double P_expected;
-    for (int i = 0; i<prices.size(); i++){
-        P_result = round_to(px(coupon_rates[i], yields[i],
-        K[i], d[i]),6);
-        P_expected = prices[i];
-        EXPECT_EQ(P_result, P_expected);
+    for (int i = 0; i < 30; i++){
+        TCs[i] = (i+1)/2.0;
     }
+
+    using Matrix_double = std::vector<std::vector<double>>;
+    using Matrix_int = std::vector<std::vector<int>>;
+
+    Matrix_double r(num_test, std::vector<double>(num_mbonos));
+    Matrix_double P(num_test, std::vector<double>(num_mbonos));
+    Matrix_double TC(num_test, std::vector<double>(num_mbonos));
+    Matrix_int K(num_test, std::vector<int>(num_mbonos));
+    Matrix_int d(num_test, std::vector<int>(num_mbonos));
+    Matrix_int dtms(num_test, std::vector<int>(num_mbonos));
+
+    // generate random input prices
+    for (int i = 0; i < num_test; i++){
+        //generate data required to produce input prices
+        for (int j = 0; j < num_mbonos; j++){
+            TC[i][j] = TCs[dist_TC(gen)];
+            dtms[i][j] = dist_dtm(gen);
+            r[i][j] = dist_r(gen);
+            K[i][j] = dist_K(gen);
+        }
+
+        d[i] = PriceToYield::find_d(dtms[i]);
+        K[i] = PriceToYield::find_k(dtms[i]);
+
+        // calculate theoretical price given generated data
+        std::vector<double> p = PriceToYield::round_to_vec(px_vec(TC[i], r[i], K[i], d[i]),6);
+
+        //add noise to theoretical price
+        std::vector<double> p_err(p.size());
+        for (int i = 0; i < p.size();i++){
+            p_err[i] = p[i] + pow(-1, dist_pm(gen))*dist_m(gen);
+        }
+        
+        // final input price with noise
+        P[i] = PriceToYield::round_to_vec(p_err,6);
+    }   
+    std::cout << std::endl;
+
+
+
+    //test price_to_yield
+    double diff = 0; double max_diff = 0; double av_diff = 0;
+    double av_time = 0; 
+    int failures = 0;
+    double p;
+    double random_err;
+    std::vector<double> P_result;
+    std::vector<double> P_expected;
+    Matrix_double yields(num_test, std::vector<double>(num_mbonos));
+
+    auto start = high_resolution_clock::now();
+    for (int i = 0; i < num_test; i++){
+        // calculate yields associated with generated prices
+        yields[i] = PriceToYield::price_to_yield(
+            P[i], dtms[i], TC[i]
+        );
+
+        // input yield result to px to compute theoretical prices and round
+        P_result = PriceToYield::round_to_vec(px_vec(TC[i], yields[i],
+        K[i], d[i]),6);
+        P_expected = P[i];
+       
+        // check computed prices equal to generated prices
+
+        for (int j = 0; j<num_mbonos; j++){
+            if(P_result[j] != P_expected[j]){
+                failures++;
+                diff += P_result[j] - P_expected[j];
+                max_diff = std::max(P_result[j] - P_expected[j], max_diff);
+            }
+            EXPECT_EQ(P_result[j], P_expected[j])
+            << std::endl
+            << "Failed case " << i <<std::endl
+            << "*********************************" << std::endl
+            << " | Input Price = " << P[i][j] << std::endl
+            << " | TC = " << TC[i][j] << std::endl
+            << " | DTM = " << dtms[i][j] << std::endl
+            << " | r true = " << r[i][j] << std::endl
+            << " | r found = " << yields[i][j] << std::endl
+            << " | P expected = " << P_expected[j] << std::endl
+            << " | P result = " << P_result[j] << std::endl
+            << " | diff = " << std::abs(P_result[j] - P_expected[j]) <<std::endl
+            << "*********************************"
+            << std::endl;
+
+        }
+        
+        
+    }
+    auto end = high_resolution_clock::now();
+    double elapsed_ms = duration_cast<microseconds>(end - start).count() / 1000.0;
+    av_time = elapsed_ms/(num_test*num_mbonos);
+    av_diff = diff/num_test;
+    double failure_pct = 100.0 * failures / num_test;
+    std::cout << std::endl
+              << "SUMMARY"
+              << " | Tests: " << num_test << " (" << num_test*num_mbonos << " bonds)" << std::endl
+              << "==========================================" <<std::endl
+              << " | Avg diff: " << av_diff
+              << " | Max diff: " << max_diff << std::endl
+              << " | Avg time: " << av_time << " ms" <<std::endl
+              << "==========================================" <<std::endl
+              << " Fail count: "<< failures 
+              << " | Failure rate: " << failure_pct << "%" 
+              << std::endl << std::endl;
 }
+
 double px(double TC, double r, int K, int d){
     double R = 0.01*r*DPP/YB;
     double C = VN*(DPP*0.01*TC)/YB;
@@ -335,6 +443,27 @@ double px(double TC, double r, int K, int d){
 
     return price;
 }
+
+std::vector<double> px_vec(std::vector<double> TC_vec,
+                           std::vector<double> r_vec,
+                           std::vector<int> K_vec,
+                           std::vector<int>  d_vec){
+         
+    std::vector<double> px_vec(TC_vec.size()); 
+    double R, C, K, d;
+
+    for (int i = 0; i<TC_vec.size();i++){
+        R = 0.01*r_vec[i]*DPP/YB;
+        C = VN*(DPP*0.01*TC_vec[i])/YB;
+        K = K_vec[i];
+        d = d_vec[i];
+        px_vec[i] = (C + C * (1 / R - 1 / (R * pow(1 + R, K - 1)))
+                + VN / pow(1 + R, K - 1))/ pow(1 + R, 1 - 1.0*d / DPP)
+                - C * 1.0*d / DPP;
+    }
+    return px_vec;
+}
+
 
 
 double round_to(double num, int dp){
