@@ -58,7 +58,7 @@ namespace PriceToYield {
         std::vector<int> k(dtms.size());
         for (int i = 0; i < dtms.size(); i++){
             // minus 1 because k should decrease on payment dates
-            k[i] = (dtms[i] - 1)/DPP;
+            k[i] = (dtms[i] - 1)/DPP + 1;
         }
         return k;
     }

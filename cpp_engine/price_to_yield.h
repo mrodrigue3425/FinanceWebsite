@@ -5,7 +5,7 @@
 
 namespace PriceToYield {
     double find_root(double C, int K, int d, double P,
-                     int* iterations = nullptr, double precision = 7e-11);
+                     int* iterations = nullptr, double precision = 6e-11);
     double round_to(double num, int dp);
     std::vector<double> round_to_vec(std::vector<double> vect, int dp);
     std::vector<int> find_k(std::vector<int> dtms);
