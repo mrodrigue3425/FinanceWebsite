@@ -47,7 +47,7 @@ namespace PriceToYield {
     std::vector<double> round_to_vec(std::vector<double> vect, int dp){
         std::vector<double> rounded_vect(vect.size());
         double factor = std::pow(10, dp);
-        for(int i = 0; i < vect.size(); i++){
+        for(size_t i = 0; i < vect.size(); i++){
             rounded_vect[i] = std::round(vect[i] * factor) / factor;
         }
         return rounded_vect;
@@ -56,7 +56,7 @@ namespace PriceToYield {
     std::vector<int> find_k (std::vector<int> dtms){
         // this function finds the number of coupon payments left until maturity
         std::vector<int> k(dtms.size());
-        for (int i = 0; i < dtms.size(); i++){
+        for (size_t i = 0; i < dtms.size(); i++){
             // minus 1 because k should decrease on payment dates
             k[i] = (dtms[i] - 1)/DPP + 1;
         }
@@ -66,7 +66,7 @@ namespace PriceToYield {
     std::vector<int> find_d (std::vector<int> dtms){
         // this function finds the days accrued in the current period
         std::vector<int> d(dtms.size());
-        for (int i = 0; i < dtms.size(); i++){
+        for (size_t i = 0; i < dtms.size(); i++){
             // days accrued returns to 0 on payment dates
             d[i] = (DPP - dtms[i] % DPP) == DPP ? 0 : DPP - dtms[i] % DPP;
         }
@@ -93,6 +93,15 @@ namespace PriceToYield {
         return (1.0*DPP/YB)*(alpha + beta - gamma + sigma);
     }
 
+    double px(double TC, double r, int K, int d){
+        double R = 0.01*r*DPP/YB;
+        double C = VN*(DPP*0.01*TC)/YB;
+        double price = (C + C * (1 / R - 1 / (R * pow(1 + R, K - 1)))
+                    + VN / pow(1 + R, K - 1))/ pow(1 + R, 1 - 1.0*d / DPP)
+                    - C * 1.0*d / DPP;
+        return price;
+    }
+
     std::vector<double> price_to_yield(const std::vector<double>& prices,
                           const std::vector<int>& dtms,
                           const std::vector<double>& coupons){
@@ -104,17 +113,29 @@ namespace PriceToYield {
         std::vector<double> C(TC.size());
          
         // convert coupon rates into cashflows C
-        for (int i=0; i<TC.size(); i++){
+        for (size_t i=0; i<TC.size(); i++){
             C[i] = VN*((0.01*TC[i]*DPP)/YB);
         }
 
         std::vector<double> yields(prices.size());
 
         // compute the yields
-        for (int i = 0 ; i < yields.size(); i++){
-            yields[i] = find_root( C[i], K[i], d[i], P[i]);
-        }
+        for (size_t i = 0 ; i < yields.size(); i++){
 
+            double yld = find_root(C[i], K[i], d[i], P[i]);
+
+            // verify by repricing
+            double p_check = round_to(px(TC[i], yld, K[i], d[i]),6);
+            double diff = std::abs(p_check - P[i]);
+
+            // if mismatch greater than 2e-6, flag as invalid
+            if (diff >= 2e-6 || std::isnan(yld) || std::isinf(yld)) {
+                yields[i] = -1.0;
+            } else {
+                yields[i] = yld;
+            }
+        }
+        
         return yields;
     }
 }

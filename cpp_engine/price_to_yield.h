@@ -15,5 +15,6 @@ namespace PriceToYield {
     std::vector<double> price_to_yield(const std::vector<double>& prices,
                           const std::vector<int>& dtms,
                           const std::vector<double>& coupons);
+    double px(double TC, double r, int K, int d);
 
 }
