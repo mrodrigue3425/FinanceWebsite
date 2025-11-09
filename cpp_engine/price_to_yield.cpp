@@ -12,18 +12,16 @@ const int DPP = 182;    // days per coupon period
 const int YB = 360;     // year base (in days)
 
 double find_root(double C, int K, int d, double P, int* iterations, double precision) {
-    double r_start = 100 * ((C * (360.0 / 182.0)) / P);  // set the initial guess to current yield
+    const double r_start = 100 * ((C * (360.0 / 182.0)) / P);  // set the initial guess to current yield
     double r_current = r_start;
-    double r_next;
-    double diff;
 
     constexpr int MAX_ITERS = 10000;
 
-    int i;
+    int i = 0;
 
-    for (i = 0; i < MAX_ITERS; i++) {
-        r_next = r_current - f(r_current, C, K, d, P) / f_prime(r_current, C, K, d);
-        diff = std::abs(r_next - r_current);
+    for (; i < MAX_ITERS; i++) {
+        const double r_next = r_current - f(r_current, C, K, d, P) / f_prime(r_current, C, K, d);
+        const double diff = std::abs(r_next - r_current);
         if (diff < precision) {
             r_current = r_next;
             break;
@@ -39,13 +37,13 @@ double find_root(double C, int K, int d, double P, int* iterations, double preci
 }
 
 double round_to(double num, int dp) {
-    double factor = std::pow(10, dp);
+    const double factor = std::pow(10, dp);
     return std::round(num * factor) / factor;
 }
 
 std::vector<double> round_to_vec(std::vector<double> vect, int dp) {
     std::vector<double> rounded_vect(vect.size());
-    double factor = std::pow(10, dp);
+    const double factor = std::pow(10, dp);
     for (size_t i = 0; i < vect.size(); i++) {
         rounded_vect[i] = std::round(vect[i] * factor) / factor;
     }
@@ -73,31 +71,31 @@ std::vector<int> find_d(std::vector<int> dtms) {
 }
 
 double f(double r, double C, int K, int d, double P) {
-    double R = 0.01 * r * DPP / YB;
-    double alpha = C / pow((1 + R), 1 - 1.0 * d / DPP);
-    double beta = C / (R * pow((1 + R), 1 - 1.0 * d / DPP));
-    double gamma = C / (R * pow((1 + R), K - 1.0 * d / DPP));
-    double sigma = VN / (pow((1 + R), K - 1.0 * d / DPP));
+    const double R = 0.01 * r * DPP / YB;
+    const double alpha = C / pow((1 + R), 1 - 1.0 * d / DPP);
+    const double beta = C / (R * pow((1 + R), 1 - 1.0 * d / DPP));
+    const double gamma = C / (R * pow((1 + R), K - 1.0 * d / DPP));
+    const double sigma = VN / (pow((1 + R), K - 1.0 * d / DPP));
 
     return alpha + beta - gamma + sigma - C * d / DPP - P;
 }
 
 double f_prime(double r, double C, int K, int d) {
-    double R = 0.01 * r * DPP / YB;
-    double alpha = C * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2);
-    double beta = C * ((1 / R) * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2) -
+    const double R = 0.01 * r * DPP / YB;
+    const double alpha = C * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2);
+    const double beta = C * ((1 / R) * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2) -
                        (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - 1));
-    double gamma = C * ((1 / R) * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1) -
+    const double gamma = C * ((1 / R) * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1) -
                         (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - K));
-    double sigma = VN * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1);
+    const double sigma = VN * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1);
 
     return (1.0 * DPP / YB) * (alpha + beta - gamma + sigma);
 }
 
 double px(double TC, double r, int K, int d) {
-    double R = 0.01 * r * DPP / YB;
-    double C = VN * (DPP * 0.01 * TC) / YB;
-    double price = (C + C * (1 / R - 1 / (R * pow(1 + R, K - 1))) + VN / pow(1 + R, K - 1)) /
+    const double R = 0.01 * r * DPP / YB;
+    const double C = VN * (DPP * 0.01 * TC) / YB;
+    const double price = (C + C * (1 / R - 1 / (R * pow(1 + R, K - 1))) + VN / pow(1 + R, K - 1)) /
                        pow(1 + R, 1 - 1.0 * d / DPP) -
                    C * 1.0 * d / DPP;
     return price;
@@ -120,11 +118,11 @@ std::vector<double> price_to_yield(const std::vector<double>& prices, const std:
 
     // compute the yields
     for (size_t i = 0; i < yields.size(); i++) {
-        double yld = find_root(C[i], K[i], d[i], P[i]);
+        const double yld = find_root(C[i], K[i], d[i], P[i]);
 
         // verify by repricing
-        double p_check = round_to(px(TC[i], yld, K[i], d[i]), 6);
-        double diff = std::abs(p_check - P[i]);
+        const double p_check = round_to(px(TC[i], yld, K[i], d[i]), 6);
+        const double diff = std::abs(p_check - P[i]);
 
         // if mismatch greater than 2e-6, flag as invalid
         if (diff >= 2e-6 || std::isnan(yld) || std::isinf(yld)) {

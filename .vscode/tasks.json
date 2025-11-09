@@ -112,6 +112,21 @@
             },
             "problemMatcher": [],
             "detail": "Builds and runs all GoogleTest-based C++ tests in cpp_engine."
+        },
+        {
+            "label": "C++: clang-tidy (cpp_engine)",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "PY_INC=$(python -c \"import sysconfig; print(sysconfig.get_path(\\\"include\\\"))\"); clang-tidy cpp_engine/*.cpp cpp_engine/tests/*.cpp -- -std=c++17 -I${PY_INC} -I./cpp_engine 2>&1 | grep -v Suppressed | grep -v cpp_engine/experiment.cpp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
         }
+     
     ]
 }
