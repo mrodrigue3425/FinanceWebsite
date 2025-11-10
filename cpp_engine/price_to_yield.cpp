@@ -12,7 +12,8 @@ const int DPP = 182;    // days per coupon period
 const int YB = 360;     // year base (in days)
 
 double find_root(double C, int K, int d, double P, int* iterations, double precision) {
-    const double r_start = 100 * ((C * (360.0 / 182.0)) / P);  // set the initial guess to current yield
+    const double r_start =
+        100 * ((C * (360.0 / 182.0)) / P);  // set the initial guess to current yield
     double r_current = r_start;
 
     constexpr int MAX_ITERS = 10000;
@@ -84,9 +85,9 @@ double f_prime(double r, double C, int K, int d) {
     const double R = 0.01 * r * DPP / YB;
     const double alpha = C * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2);
     const double beta = C * ((1 / R) * (1.0 * d / DPP - 1) * pow(1 + R, 1.0 * d / DPP - 2) -
-                       (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - 1));
+                             (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - 1));
     const double gamma = C * ((1 / R) * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1) -
-                        (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - K));
+                              (1 / (R * R)) * pow(1 + R, 1.0 * d / DPP - K));
     const double sigma = VN * (1.0 * d / DPP - K) * pow(1 + R, 1.0 * d / DPP - K - 1);
 
     return (1.0 * DPP / YB) * (alpha + beta - gamma + sigma);
@@ -96,8 +97,8 @@ double px(double TC, double r, int K, int d) {
     const double R = 0.01 * r * DPP / YB;
     const double C = VN * (DPP * 0.01 * TC) / YB;
     const double price = (C + C * (1 / R - 1 / (R * pow(1 + R, K - 1))) + VN / pow(1 + R, K - 1)) /
-                       pow(1 + R, 1 - 1.0 * d / DPP) -
-                   C * 1.0 * d / DPP;
+                             pow(1 + R, 1 - 1.0 * d / DPP) -
+                         C * 1.0 * d / DPP;
     return price;
 }
 

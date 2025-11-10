@@ -126,6 +126,20 @@
                 "isDefault": true
             },
             "problemMatcher": "$gcc"
+        },
+        {
+            "label": "C++: clang-format (cpp_engine)",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "find cpp_engine tests -type f \\( -name '*.cpp' -o -name '*.h' \\) -exec clang-format -i {} +"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
         }
      
     ]
