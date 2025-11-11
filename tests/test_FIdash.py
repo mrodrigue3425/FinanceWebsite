@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import datetime
 from src import FIdash
-
+import random
 
 def test_banxico_data_initialization():
     test_object = FIdash.BanxicoDataFetcher()
@@ -183,5 +183,88 @@ def test_get_labels_dates_yields():
             ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
 
 
-# if __name__ == '__main__':
-#     pytest.main(["tests/test_FIdash.py"])
+def generate_random_API_responses(n):
+
+    # simulates n random API responses for yield curve and summary data
+
+    random.seed(42)
+
+    test_object = FIdash.BanxicoDataFetcher()
+
+    response_list = []
+
+    possible_coupons = np.arange(0.25,15.25,0.25)
+
+    for _ in range(min(n,10000)):
+
+        ylds = []
+        dtms_cetes = []
+        
+        pxs = []
+        dtms_mbonos = []
+        coups = []
+
+        summary = []
+
+        # establish random response orders
+        rand_order_cetes_yld = random.sample(range(5), 5)
+        rand_order_cetes_dtm = random.sample(range(5), 5)
+
+        rand_order_mbonos_px = random.sample(range(5), 5)
+        rand_order_mbonos_dtm = random.sample(range(5), 5) 
+        rand_order_mbonos_coup = random.sample(range(5), 5) 
+
+        rand_order_summary = random.sample(range(6), 6)
+
+        # establish other random data
+        rand_date = f"{random.randrange(1,29)}/{random.randrange(1,13)}/{random.randrange(2000,2026)}"
+
+        # generate random mbonos and cetes data
+        for i in range(5):
+            ylds.append({
+                "idSerie": list(test_object.CETES_MATURITY_MAP_YLD.keys())[rand_order_cetes_yld[i]],
+                "titulo": list(test_object.CETES_MATURITY_MAP_YLD.values())[rand_order_cetes_yld[i]],
+                "datos": [{"fecha": rand_date, "dato": str(round(random.uniform(0, 15), 6))}]
+            })
+            dtms_cetes.append({
+                "idSerie": list(test_object.CETES_MATURITY_MAP_DTM.keys())[rand_order_cetes_dtm[i]],
+                "titulo": list(test_object.CETES_MATURITY_MAP_DTM.values())[rand_order_cetes_dtm[i]],
+                "datos": [{"fecha": rand_date, "dato": f"{random.randrange(0,1000):,.6f}"}]
+            })
+            pxs.append({
+                "idSerie": list(test_object.MBONOS_MATURITY_MAP_PX.keys())[rand_order_mbonos_px[i]],
+                "titulo": list(test_object.MBONOS_MATURITY_MAP_PX.values())[rand_order_mbonos_px[i]],
+                "datos": [{"fecha": rand_date, "dato": str(round(random.uniform(70, 130), 6))}]
+            })
+            dtms_mbonos.append({
+                "idSerie": list(test_object.MBONOS_MATURITY_MAP_DTM.keys())[rand_order_mbonos_dtm[i]],
+                "titulo": list(test_object.MBONOS_MATURITY_MAP_DTM.values())[rand_order_mbonos_dtm[i]],
+                "datos": [{"fecha": rand_date, "dato": f"{random.randrange(0,10000):,.6f}"}]
+            })
+            coups.append({
+                "idSerie": list(test_object.MBONOS_MATURITY_MAP_COUP.keys())[rand_order_mbonos_coup[i]],
+                "titulo": list(test_object.MBONOS_MATURITY_MAP_COUP.values())[rand_order_mbonos_coup[i]],
+                "datos": [{"fecha": rand_date, "dato": f"{np.random.choice((possible_coupons)):.6f}"}]
+            })
+
+        # generate random summary data
+        for i in range(6):
+            summary.append({
+                "idSerie": list(test_object.SUMMARY_MAP.keys())[rand_order_summary[i]],
+                "titulo": list(test_object.SUMMARY_MAP.values())[rand_order_summary[i]],
+                "datos": [{"fecha": rand_date, "dato": str(round(random.uniform(0, 20),6))}]
+            })
+
+        # simulate response structure
+        response = {
+            "cetes_yld": ylds,
+            "cetes_dtm": dtms_cetes,
+            "mbonos_px" : pxs,
+            "mbonos_dtm" : dtms_mbonos,
+            "mbonos_coup" : coups,
+            "summary": summary,
+        }
+
+        response_list.append(response)
+
+    return response_list   
