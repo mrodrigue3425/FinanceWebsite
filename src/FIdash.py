@@ -294,22 +294,26 @@ class BanxicoDataFetcher:
         # covert to float returned prices, yields, and coupon rates
         # convert to int days to maturity
 
+        clean_px_ylds = px_ylds.copy()
+        clean_dtms = dtms.copy()
+
         if coups is None:
             logger.debug("Cleaning returned cetes data.")
         else:
             logger.debug("Cleaning returned mbonos data.")
 
-        for px_yld in px_ylds:
-            px_yld["datos"][0]["dato"] = float(px_yld["datos"][0]["dato"])
-        for dtm in dtms:
+        for px_yld in clean_px_ylds:
+            px_yld["datos"][0]["dato"] = round(float(px_yld["datos"][0]["dato"]),6)
+        for dtm in clean_dtms:
             dtm["datos"][0]["dato"] = int(float(dtm["datos"][0]["dato"].replace(",","")))
 
         if coups is None:
-            return px_ylds, dtms
+            return clean_px_ylds, clean_dtms
         else:
-            for coup in coups:
-                coup["datos"][0]["dato"] = float(coup["datos"][0]["dato"])
-            return px_ylds, dtms, coups
+            clean_coups = coups.copy()
+            for coup in clean_coups:
+                coup["datos"][0]["dato"] = round(float(coup["datos"][0]["dato"]),2)
+            return clean_px_ylds, clean_dtms, clean_coups
 
     
 
@@ -458,4 +462,4 @@ class BanxicoDataFetcher:
         return curve_labels, curve_dates, curve_yields, curve_dtms
 
     def __repr__(self):
-        return f"<BanxicoData({len(self.cetes_yld_ids)} cetes, {len(self.mbonos_px_ids)} mbonos , {len(self.summary_ids)} summary stats)>"
+        return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, {len(self.MBONOS_MATURITY_MAP_PX.keys())} mbonos , {len(self.SUMMARY_MAP.keys())} summary stats)>"
