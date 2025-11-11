@@ -76,6 +76,32 @@ def test_call_api():
         [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["summary"]]
     )
 
+def test_clean_returned_data():
+
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    banxico_data_many = generate_random_API_responses(100)
+
+    for banxico_data in banxico_data_many:
+
+        clean_ylds, clean_dtms_cetes = test_object.clean_returned_data(
+            banxico_data["cetes_yld"],
+            banxico_data["cetes_dtm"],
+        )
+        
+        clean_pxs, clean_dtms_mbonos, clean_coups = test_object.clean_returned_data(
+            banxico_data["mbonos_px"], 
+            banxico_data["mbonos_dtm"], 
+            banxico_data["mbonos_coup"], 
+        )
+
+        assert all(isinstance(x.get("datos")[0].get("dato"), float) for x in clean_ylds)
+        assert all(isinstance(x.get("datos")[0].get("dato"), int) for x in clean_dtms_cetes)
+
+        assert all(isinstance(x.get("datos")[0].get("dato"), float) for x in clean_pxs)
+        assert all(isinstance(x.get("datos")[0].get("dato"), int) for x in clean_dtms_mbonos)
+        assert all(isinstance(x.get("datos")[0].get("dato"), float) for x in clean_coups)
 
 def test_reorder_cetes_data():
     test_object = FIdash.BanxicoDataFetcher()
