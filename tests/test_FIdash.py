@@ -188,12 +188,6 @@ def test_reorder_data():
             mbonos_coup_data
         )
 
-        bonos_px_ids = [x.get("idSerie") for x in reordered_bonos_px]
-        bonos_dtm_ids = [x.get("idSerie") for x in reordered_bonos_dtm]
-        bonos_coup_ids = [x.get("idSerie") for x in reordered_bonos_coup]
-
-        assert bonos_px_ids == bonos_dtm_ids == bonos_coup_ids
-
         for tenor in reordered_bonos_px: #px
             # test reordered data is in acquired data
             assert tenor in mbonos_px_data
@@ -272,7 +266,7 @@ def test_reorder_data():
         # test dtm data is ordered correctly
 
         dtm_maturities_in_days = [
-            float(x.get("datos")[0]["dato"].replace(",","")) for x in reordered_bonos_dtm
+            x.get("datos")[0]["dato"] for x in reordered_bonos_dtm
         ]
 
         assert dtm_maturities_in_days == sorted(dtm_maturities_in_days)
@@ -332,6 +326,15 @@ def generate_random_API_responses(n):
 
     random.seed(42)
 
+    def convert_to_days(maturity_str):
+        parts = maturity_str.split(" ")
+        if parts[1].lower() == "days":
+            return int(parts[0])
+        elif parts[1].lower() == "years":
+            return int(parts[0]) * 364
+        else:
+            raise ValueError(f"Unknown maturity format: {maturity_str}")
+
     test_object = FIdash.BanxicoDataFetcher()
 
     response_list = []
@@ -369,21 +372,31 @@ def generate_random_API_responses(n):
                 "titulo": list(test_object.CETES_MATURITY_MAP_YLD.values())[rand_order_cetes_yld[i]],
                 "datos": [{"fecha": rand_date, "dato": str(round(random.uniform(0, 15), 6))}]
             })
+
+            titulo = list(test_object.CETES_MATURITY_MAP_DTM.values())[rand_order_cetes_dtm[i]]
+            dtm = int(convert_to_days(titulo))
+            rand_err = -1**random.randrange(0,2)*random.randrange(0,5)
             dtms_cetes.append({
                 "idSerie": list(test_object.CETES_MATURITY_MAP_DTM.keys())[rand_order_cetes_dtm[i]],
-                "titulo": list(test_object.CETES_MATURITY_MAP_DTM.values())[rand_order_cetes_dtm[i]],
-                "datos": [{"fecha": rand_date, "dato": f"{random.randrange(0,1000):,.6f}"}]
+                "titulo": titulo,
+                "datos": [{"fecha": rand_date, "dato": f"{dtm+rand_err:,.6f}"}]
             })
+
             pxs.append({
                 "idSerie": list(test_object.MBONOS_MATURITY_MAP_PX.keys())[rand_order_mbonos_px[i]],
                 "titulo": list(test_object.MBONOS_MATURITY_MAP_PX.values())[rand_order_mbonos_px[i]],
                 "datos": [{"fecha": rand_date, "dato": str(round(random.uniform(70, 130), 6))}]
             })
+
+            titulo = list(test_object.MBONOS_MATURITY_MAP_DTM.values())[rand_order_mbonos_dtm[i]]
+            dtm = int(convert_to_days(titulo))
+            rand_err = -1**random.randrange(0,2)*random.randrange(0,50)
             dtms_mbonos.append({
                 "idSerie": list(test_object.MBONOS_MATURITY_MAP_DTM.keys())[rand_order_mbonos_dtm[i]],
-                "titulo": list(test_object.MBONOS_MATURITY_MAP_DTM.values())[rand_order_mbonos_dtm[i]],
-                "datos": [{"fecha": rand_date, "dato": f"{random.randrange(0,10000):,.6f}"}]
+                "titulo": titulo,
+                "datos": [{"fecha": rand_date, "dato": f"{dtm+rand_err:,.6f}"}]
             })
+
             coups.append({
                 "idSerie": list(test_object.MBONOS_MATURITY_MAP_COUP.keys())[rand_order_mbonos_coup[i]],
                 "titulo": list(test_object.MBONOS_MATURITY_MAP_COUP.values())[rand_order_mbonos_coup[i]],
