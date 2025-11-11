@@ -64,7 +64,7 @@ def fi_dashboard():
 
     # try get banxico data
     try:
-        curve_labels, curve_dates, curve_yields, summary_data = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, summary_data = (
             banxico_data_fetcher.get_data()
         )
         logger.info("Retrieved data from Banxico API successfully.")
@@ -116,6 +116,7 @@ def fi_dashboard():
         curve_labels=curve_labels,
         curve_dates=curve_dates,
         curve_yields=curve_yields,
+        curve_dtms=curve_dtms,
         summary_data=summary_data,
     )
 

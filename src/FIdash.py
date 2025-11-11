@@ -3,6 +3,7 @@ import os
 import requests
 from flask import Flask
 import logging
+import cpp_engine
 
 
 # load environment variables from .env file
@@ -142,16 +143,69 @@ class BanxicoDataFetcher:
 
         logger.debug("BanxicoDataFetcher: fetching data.")
 
+        # call the Banxico API
         banxico_data = self.call_api()
 
-        reordered_cetes_data = self.reorder_cetes_data(banxico_data["cetes"])
-        parsed_summary_data = self.parse_summary_data(banxico_data["summary"])
+        # --- clean returned data ---
 
-        curve_labels, curve_dates, curve_yields = self.get_labels_dates_yields(
-            reordered_cetes_data
+        # cetes
+        cleaned_cetes_ylds, cleaned_cetes_dtms = self.clean_returned_data(
+            banxico_data["cetes_yld"],
+            banxico_data["cetes_dtm"]
         )
 
-        return curve_labels, curve_dates, curve_yields, parsed_summary_data
+        # mbonos 
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = self.clean_returned_data(
+            banxico_data["mbonos_px"],
+            banxico_data["mbonos_dtm"],
+            banxico_data["mbonos_coup"]
+        )
+
+        # --- reorder returned data ---
+
+        # cetes
+        reordered_cetes_ylds, reordered_cetes_dtms = self.reorder_data(
+            cleaned_cetes_ylds,
+            cleaned_cetes_dtms
+        )
+
+        # mbonos
+        reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = self.reorder_data(
+            cleaned_mbonos_pxs,
+            cleaned_mbonos_dtms,
+            cleaned_mbonos_coups
+        )
+
+        # --- convert mbono prices into yields ---
+
+        reordered_bonos_ylds = self.prc_to_yld(
+            reordered_bonos_pxs,
+            reordered_bonos_dtms,
+            reordered_bonos_coups
+        )
+
+        # --- parse summary data --- 
+
+        parsed_summary_data = self.parse_summary_data(banxico_data["summary"])
+
+        # --- final yield curve data ---
+
+        yield_curve_data = {
+            "cetes": {
+                "ylds" : reordered_cetes_ylds,
+                "dtms" : reordered_cetes_dtms
+            },
+            "mbonos": {
+                "ylds" : reordered_bonos_ylds,
+                "dtms" : reordered_bonos_dtms
+            }
+        }
+     
+        curve_labels, curve_dates, curve_yields, curve_dtms = self.get_labels_dates_yields(
+            yield_curve_data
+        )
+
+        return curve_labels, curve_dates, curve_yields, curve_dtms, parsed_summary_data
 
     def call_api(self):
 
@@ -234,8 +288,34 @@ class BanxicoDataFetcher:
             }
 
         return returned_data
+    
+    def clean_returned_data(self, px_ylds, dtms, coups = None):
+
+        # covert to float returned prices, yields, and coupon rates
+        # convert to int days to maturity
+
+        if coups is None:
+            logger.debug("Cleaning returned cetes data.")
+        else:
+            logger.debug("Cleaning returned mbonos data.")
+
+        for px_yld in px_ylds:
+            px_yld["datos"][0]["dato"] = float(px_yld["datos"][0]["dato"])
+        for dtm in dtms:
+            dtm["datos"][0]["dato"] = int(float(dtm["datos"][0]["dato"].replace(",","")))
+
+        if coups is None:
+            return px_ylds, dtms
+        else:
+            for coup in coups:
+                coup["datos"][0]["dato"] = float(coup["datos"][0]["dato"])
+            return px_ylds, dtms, coups
+
+    
 
     def reorder_data(self, yld_px_response_data, dtm_response_data, coup_response_data = None):
+
+        # ensure returned data is in order of increasing term to maturity
 
         def convert_to_days(maturity_str):
             parts = maturity_str.split(" ")
@@ -330,19 +410,49 @@ class BanxicoDataFetcher:
             parsed_summary[metric] = {"value": value, "date": dt}
 
         return parsed_summary
+    
+    def prc_to_yld(self, prices, dtms, coups):
 
-    def get_labels_dates_yields(self, curve_reordered):
+        logger.debug("Converting mbono clean prices into yields")
+
+        # convert mbono clean prices into yields
+        yields = prices.copy()
+
+        pxs = [x["datos"][0]["dato"] for x in prices]
+        dtms = [x["datos"][0]["dato"] for x in dtms]
+        coups = [x["datos"][0]["dato"] for x in coups]
+        
+        reordered_bonos_yields = cpp_engine.price_to_yield(pxs, dtms, coups)
+
+        for i, yld in enumerate(yields):
+            yld["datos"][0]["dato"] = reordered_bonos_yields[i]
+
+        return yields
+
+    def get_labels_dates_yields(self, curve_dict):
+
+        # get labels, dates, and yields to parse in html
 
         curve_labels = []
         curve_dates = []
         curve_yields = []
+        curve_dtms = []
 
-        for tenor in curve_reordered:
+        # cetes
+        for i, tenor in enumerate(curve_dict.get("cetes").get("ylds")):
             curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")))
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
-            curve_yields.append(round(float(tenor.get("datos")[0].get("dato")), 6))
+            curve_yields.append(tenor.get("datos")[0].get("dato"))
+            curve_dtms.append(curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato"))
 
-        return curve_labels, curve_dates, curve_yields
+        # mbonos
+        for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
+            curve_labels.append(self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")))
+            curve_dates.append(tenor.get("datos")[0].get("fecha"))
+            curve_yields.append(tenor.get("datos")[0].get("dato"))
+            curve_dtms.append(curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato"))
+
+        return curve_labels, curve_dates, curve_yields, curve_dtms
 
     def __repr__(self):
         return f"<BanxicoData(cetes_yld_ids={self.cetes_yld_ids}, summary_ids={self.summary_ids})>"
