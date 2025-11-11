@@ -103,62 +103,179 @@ def test_clean_returned_data():
         assert all(isinstance(x.get("datos")[0].get("dato"), int) for x in clean_dtms_mbonos)
         assert all(isinstance(x.get("datos")[0].get("dato"), float) for x in clean_coups)
 
-def test_reorder_cetes_data():
+def test_reorder_data():
+
     test_object = FIdash.BanxicoDataFetcher()
-    cetes_data = [
-        {
-            "idSerie": "SF349889",
-            "titulo": "",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.789997"}],
-        },
-        {
-            "idSerie": "SF45470",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 28 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.399977"}],
-        },
-        {
-            "idSerie": "SF45472",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 182 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.409998"}],
-        },
-        {
-            "idSerie": "SF45471",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 91 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.310613"}],
-        },
-        {
-            "idSerie": "SF45473",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 364 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.500388"}],
-        },
-    ]
 
-    reordered_cetes_data = test_object.reorder_cetes_data(cetes_data)
+    # generate random data
+    banxico_data_many = generate_random_API_responses(100)
 
-    for tenor in reordered_cetes_data:
-        assert tenor in cetes_data
-        assert tenor.get("idSerie") in test_object.CETES_MATURITY_MAP.keys()
-        assert tenor.get("idSerie") in [data.get("idSerie") for data in cetes_data]
+    for banxico_data in banxico_data_many:
 
-        maturity = test_object.CETES_MATURITY_MAP.get(tenor.get("idSerie"))
-        assert maturity in test_object.CETES_MATURITY_MAP.values()
-
-    maturities_in_days = [
-        (
-            int(test_object.CETES_MATURITY_MAP.get(tenor.get("idSerie")).split()[0])
-            if test_object.CETES_MATURITY_MAP.get(tenor.get("idSerie"))
-            .split()[1]
-            .lower()
-            == "days"
-            else int(
-                test_object.CETES_MATURITY_MAP.get(tenor.get("idSerie")).split()[0]
-            )
-            * 364
+        cetes_yld_data, cetes_dtm_data = test_object.clean_returned_data(
+            banxico_data["cetes_yld"],
+            banxico_data["cetes_dtm"],
         )
-        for tenor in reordered_cetes_data
-    ]
 
-    assert maturities_in_days == sorted(maturities_in_days)
+        mbonos_px_data, mbonos_dtm_data, mbonos_coup_data = test_object.clean_returned_data(
+            banxico_data["mbonos_px"],
+            banxico_data["mbonos_dtm"],
+            banxico_data["mbonos_coup"],
+        )
+
+     
+
+        # --- test cetes reordering --- 
+        reordered_cetes_yld, reordered_cetes_dtm = test_object.reorder_data(cetes_yld_data, cetes_dtm_data)
+
+        for tenor in reordered_cetes_yld: #yld
+            # test reordered data is in acquired data
+            assert tenor in cetes_yld_data
+            # test reordered series ids is in originally requested series
+            assert tenor.get("idSerie") in test_object.CETES_MATURITY_MAP_YLD.keys()
+            # test reordered series ids in acquired series ids
+            assert tenor.get("idSerie") in [data.get("idSerie") for data in cetes_yld_data]
+
+            maturity = test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))
+
+            # test reordered tenor (maturity) in originally requested tenors
+            assert maturity in test_object.CETES_MATURITY_MAP_YLD.values()
+
+        for tenor in reordered_cetes_dtm: #dtm
+            # test reordered data is in acquired data
+            assert tenor in cetes_dtm_data
+            # test reordered series ids is in oringially requested series
+            assert tenor.get("idSerie") in test_object.CETES_MATURITY_MAP_DTM.keys()
+            # test reordered series ids in acquired series ids
+            assert tenor.get("idSerie") in [data.get("idSerie") for data in cetes_dtm_data]
+
+            maturity = test_object.CETES_MATURITY_MAP_DTM.get(tenor.get("idSerie"))
+
+            # test reordered tenor (maturity) in originally requested tenors
+            assert maturity in test_object.CETES_MATURITY_MAP_DTM.values()
+
+        # test yield data is reordered correctly with increasing days to maturity
+        yld_maturities_in_days = [
+            (
+                int(test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")).split()[0])
+                if test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))
+                .split()[1]
+                .lower()
+                == "days"
+                else int(
+                    test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")).split()[0]
+                )
+                * 364
+            )
+            for tenor in reordered_cetes_yld
+        ]
+
+        assert yld_maturities_in_days == sorted(yld_maturities_in_days)
+
+        # test dtm data is ordered correctly
+
+        dtm_maturities_in_days = [
+            x.get("datos")[0]["dato"] for x in reordered_cetes_dtm
+        ]
+
+        assert dtm_maturities_in_days == sorted(dtm_maturities_in_days)
+
+        # --- test mbonos reordering --- 
+
+        reordered_bonos_px, reordered_bonos_dtm, reordered_bonos_coup = test_object.reorder_data(
+            mbonos_px_data,
+            mbonos_dtm_data,
+            mbonos_coup_data
+        )
+
+        bonos_px_ids = [x.get("idSerie") for x in reordered_bonos_px]
+        bonos_dtm_ids = [x.get("idSerie") for x in reordered_bonos_dtm]
+        bonos_coup_ids = [x.get("idSerie") for x in reordered_bonos_coup]
+
+        assert bonos_px_ids == bonos_dtm_ids == bonos_coup_ids
+
+        for tenor in reordered_bonos_px: #px
+            # test reordered data is in acquired data
+            assert tenor in mbonos_px_data
+            # test reordered series ids is in oringially requested series
+            assert tenor.get("idSerie") in test_object.MBONOS_MATURITY_MAP_PX.keys()
+            # test reordered series ids in acquired series ids
+            assert tenor.get("idSerie") in [data.get("idSerie") for data in mbonos_px_data]
+
+            maturity = test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))
+
+            # test reordered tenor (maturity) in originally requested tenors
+            assert maturity in test_object.MBONOS_MATURITY_MAP_PX.values()
+
+        for tenor in reordered_bonos_dtm: #dtm
+            # test reordered data is in acquired data
+            assert tenor in mbonos_dtm_data
+            # test reordered series ids is in oringially requested series
+            assert tenor.get("idSerie") in test_object.MBONOS_MATURITY_MAP_DTM.keys()
+            # test reordered series ids in acquired series ids
+            assert tenor.get("idSerie") in [data.get("idSerie") for data in mbonos_dtm_data]
+
+            maturity = test_object.MBONOS_MATURITY_MAP_DTM.get(tenor.get("idSerie"))
+
+            # test reordered tenor (maturity) in originally requested tenors
+            assert maturity in test_object.MBONOS_MATURITY_MAP_DTM.values()
+
+        for tenor in reordered_bonos_coup: #coup
+            # test reordered data is in acquired data
+            assert tenor in mbonos_coup_data
+            # test reordered series ids is in oringially requested series
+            assert tenor.get("idSerie") in test_object.MBONOS_MATURITY_MAP_COUP.keys()
+            # test reordered series ids in acquired series ids
+            assert tenor.get("idSerie") in [data.get("idSerie") for data in mbonos_coup_data]
+
+            maturity = test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))
+
+            # test reordered tenor (maturity) in originally requested tenors
+            assert maturity in test_object.MBONOS_MATURITY_MAP_COUP.values()
+
+        # test price data is reordered correctly with increasing days to maturity
+        px_maturities_in_days = [
+            (
+                int(test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")).split()[0])
+                if test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))
+                .split()[1]
+                .lower()
+                == "days"
+                else int(
+                    test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")).split()[0]
+                )
+                * 364
+            )
+            for tenor in reordered_bonos_px
+        ]
+
+        assert px_maturities_in_days == sorted(px_maturities_in_days)
+
+        # test coup data is reordered correctly with increasing days to maturity
+        coup_maturities_in_days = [
+            (
+                int(test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie")).split()[0])
+                if test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))
+                .split()[1]
+                .lower()
+                == "days"
+                else int(
+                    test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie")).split()[0]
+                )
+                * 364
+            )
+            for tenor in reordered_bonos_coup
+        ]
+
+        assert coup_maturities_in_days == sorted(coup_maturities_in_days)
+
+        # test dtm data is ordered correctly
+
+        dtm_maturities_in_days = [
+            float(x.get("datos")[0]["dato"].replace(",","")) for x in reordered_bonos_dtm
+        ]
+
+        assert dtm_maturities_in_days == sorted(dtm_maturities_in_days)
 
 
 def test_get_labels_dates_yields():
