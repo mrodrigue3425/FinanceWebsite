@@ -2,6 +2,7 @@ import numpy as np
 from datetime import datetime
 from src import FIdash
 import random
+import subprocess
 
 def test_banxico_data_initialization():
     test_object = FIdash.BanxicoDataFetcher()
@@ -271,6 +272,13 @@ def test_reorder_data():
 
         assert dtm_maturities_in_days == sorted(dtm_maturities_in_days)
 
+def test_cpp_price_to_yield():
+    result = subprocess.run(
+        ["cpp_engine/tests/test_price_to_yield", "--gtest_filter=price_to_yieldTest.BasicCase"],
+         capture_output=True,
+         text=True)
+    print(result.stdout)  # so pytest shows GTest output
+    assert result.returncode == 0, "GTest failed!"
 
 def test_get_labels_dates_yields():
     test_object = FIdash.BanxicoDataFetcher()
