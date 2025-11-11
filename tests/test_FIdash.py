@@ -23,10 +23,30 @@ def test_banxico_data_initialization():
 def test_call_api():
     test_object = FIdash.BanxicoDataFetcher()
     test_data = test_object.call_api()
+
+    # test returned series ids are the same as defined in BanxicoDataFetcher
     assert all(
         [
-            y in test_object.CETES_MATURITY_MAP.keys()
-            for y in [x["idSerie"] for x in test_data["cetes"]]
+            y in test_object.CETES_MATURITY_MAP_YLD.keys()
+            for y in [x["idSerie"] for x in test_data["cetes_yld"]]
+        ]
+    )
+    assert all(
+        [
+            y in test_object.CETES_MATURITY_MAP_DTM.keys()
+            for y in [x["idSerie"] for x in test_data["cetes_dtm"]]
+        ]
+    )
+    assert all(
+        [
+            y in test_object.MBONOS_MATURITY_MAP_PX.keys()
+            for y in [x["idSerie"] for x in test_data["mbonos_px"]]
+        ]
+    )
+    assert all(
+        [
+            y in test_object.MBONOS_MATURITY_MAP_COUP.keys()
+            for y in [x["idSerie"] for x in test_data["mbonos_coup"]]
         ]
     )
     assert all(
@@ -35,8 +55,22 @@ def test_call_api():
             for y in [x["idSerie"] for x in test_data["summary"]]
         ]
     )
+
+    # test all returned data is numeric
     assert all(
-        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["cetes"]]
+        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["cetes_yld"]]
+    )
+    assert all(
+        [isinstance(int(float(x["datos"][0]["dato"].replace(",",""))), int) for x in test_data["cetes_dtm"]]
+    )
+    assert all(
+        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["mbonos_px"]]
+    )
+    assert all(
+        [isinstance(int(float(x["datos"][0]["dato"].replace(",",""))), int) for x in test_data["mbonos_dtm"]]
+    )
+    assert all(
+        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["mbonos_coup"]]
     )
     assert all(
         [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["summary"]]
