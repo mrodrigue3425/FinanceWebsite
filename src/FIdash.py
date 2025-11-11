@@ -400,6 +400,8 @@ class BanxicoDataFetcher:
 
     def parse_summary_data(self, summary_response_data):
 
+        logger.debug("Parsing summary data.")
+
         parsed_summary = {}
 
         for series in summary_response_data:
@@ -413,7 +415,7 @@ class BanxicoDataFetcher:
     
     def prc_to_yld(self, prices, dtms, coups):
 
-        logger.debug("Converting mbono clean prices into yields")
+        logger.debug("Converting mbono clean prices into yields.")
 
         # convert mbono clean prices into yields
         yields = prices.copy()
@@ -432,6 +434,7 @@ class BanxicoDataFetcher:
     def get_labels_dates_yields(self, curve_dict):
 
         # get labels, dates, and yields to parse in html
+        logger.debug("Getting labels, dates, yields and dtms.")
 
         curve_labels = []
         curve_dates = []
@@ -455,12 +458,4 @@ class BanxicoDataFetcher:
         return curve_labels, curve_dates, curve_yields, curve_dtms
 
     def __repr__(self):
-        return f"<BanxicoData(cetes_yld_ids={self.cetes_yld_ids}, summary_ids={self.summary_ids})>"
-
-
-if __name__ == "__main__":
-    print("\n==== Testing Banxico Data Fetch ====\n")
-    app = Flask(__name__)
-    with app.app_context():
-        test = BanxicoDataFetcher()
-        test.get_data()
+        return f"<BanxicoData({len(self.cetes_yld_ids)} cetes, {len(self.mbonos_px_ids)} mbonos , {len(self.summary_ids)} summary stats)>"

@@ -5,7 +5,19 @@ from src import FIdash
 
 def test_banxico_data_initialization():
     test_object = FIdash.BanxicoDataFetcher()
+    
+    # test api key is available
     assert test_object.api_key is not None
+
+    # test all Banxico API series ids are unique
+    ids = test_object.CETES_MATURITY_MAP_YLD.copy()
+    ids.update(test_object.CETES_MATURITY_MAP_DTM)
+    ids.update(test_object.MBONOS_MATURITY_MAP_PX)
+    ids.update(test_object.MBONOS_MATURITY_MAP_DTM)
+    ids.update(test_object.MBONOS_MATURITY_MAP_COUP)
+    ids.update(test_object.SUMMARY_MAP)
+
+    assert len(ids) == len(set(ids.keys()))
 
 
 def test_call_api():
