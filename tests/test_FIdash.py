@@ -3,6 +3,7 @@ from datetime import datetime
 from src import FIdash
 import random
 import subprocess
+import math
 
 def test_banxico_data_initialization():
     test_object = FIdash.BanxicoDataFetcher()
@@ -272,6 +273,53 @@ def test_reorder_data():
 
         assert dtm_maturities_in_days == sorted(dtm_maturities_in_days)
 
+def test_prc_to_yld():
+
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    banxico_data_many = generate_random_API_responses(100)
+
+    for banxico_data in banxico_data_many:
+
+        # mbonos 
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = test_object.clean_returned_data(
+            banxico_data["mbonos_px"],
+            banxico_data["mbonos_dtm"],
+            banxico_data["mbonos_coup"]
+        )
+
+        # --- reorder returned data ---
+
+        # mbonos
+        reordered_mbonos_pxs, reordered_mbonos_dtms, reordered_mbonos_coups = test_object.reorder_data(
+            cleaned_mbonos_pxs,
+            cleaned_mbonos_dtms,
+            cleaned_mbonos_coups
+        )
+
+        # --- convert mbono prices into yields ---
+
+        reordered_bonos_ylds = test_object.prc_to_yld(
+            reordered_mbonos_pxs,
+            reordered_mbonos_dtms,
+            reordered_mbonos_coups
+        )
+
+        ylds = [x.get("datos")[0].get("dato") for x in reordered_bonos_ylds]
+
+        TCs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_coups]
+        ds = find_d([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+        Ks = find_k([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+
+        pxs_to_compare = []
+        for i in range(len(ylds)):
+            pxs_to_compare.append(round(yld_to_px(TCs[i],ylds[i],Ks[i],ds[i]),6)) 
+
+        pxs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_pxs]
+
+        assert pxs == pxs_to_compare
+
 def test_cpp_price_to_yield():
     result = subprocess.run(
         ["cpp_engine/tests/test_price_to_yield", "--gtest_filter=price_to_yieldTest.BasicCase"],
@@ -432,3 +480,35 @@ def generate_random_API_responses(n):
         response_list.append(response)
 
     return response_list   
+
+def yld_to_px(TC, r, K, d):
+
+    VN = 100   # par value in pesos
+    DPP = 182  # days per coupon period
+    YB = 360   # year base (in days)
+
+    R = 0.01 * r * DPP / YB
+    C = VN * (DPP * 0.01 * TC) / YB
+    price = (
+        (C + C * (1 / R - 1 / (R * math.pow(1 + R, K - 1))) + VN / math.pow(1 + R, K - 1))
+        / math.pow(1 + R, 1 - d / DPP)
+        - C * d / DPP
+    )
+    return price
+
+def find_k(dtms):
+    DPP = 182  # days per coupon period
+    k = []
+    for dtm in dtms:
+        # minus 1 because k should decrease on payment dates
+        k.append((dtm - 1) // DPP + 1)
+    return k
+
+def find_d(dtms):
+    DPP = 182  
+    d = []
+    for dtm in dtms:
+        # days accrued returns to 0 on payment dates
+        remainder = DPP - (dtm % DPP)
+        d.append(0 if remainder == DPP else remainder)
+    return d
