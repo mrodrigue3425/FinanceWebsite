@@ -16,10 +16,11 @@ logger = logging.getLogger(__name__)
 
 class BanxicoDataFetcher:
     """
-        Fetches data from Banxico SIE API.
+    Fetches data from Banxico SIE API.
 
-        See https://www.banxico.org.mx/SieAPIRest/service/v1/
+    See https://www.banxico.org.mx/SieAPIRest/service/v1/
     """
+
     # --- cetes data Banxico API series ids ---
 
     # cetes yields
@@ -151,59 +152,51 @@ class BanxicoDataFetcher:
 
         # cetes
         cleaned_cetes_ylds, cleaned_cetes_dtms = self.clean_returned_data(
-            banxico_data["cetes_yld"],
-            banxico_data["cetes_dtm"]
+            banxico_data["cetes_yld"], banxico_data["cetes_dtm"]
         )
 
-        # mbonos 
-        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = self.clean_returned_data(
-            banxico_data["mbonos_px"],
-            banxico_data["mbonos_dtm"],
-            banxico_data["mbonos_coup"]
+        # mbonos
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
+            self.clean_returned_data(
+                banxico_data["mbonos_px"],
+                banxico_data["mbonos_dtm"],
+                banxico_data["mbonos_coup"],
+            )
         )
 
         # --- reorder returned data ---
 
         # cetes
         reordered_cetes_ylds, reordered_cetes_dtms = self.reorder_data(
-            cleaned_cetes_ylds,
-            cleaned_cetes_dtms
+            cleaned_cetes_ylds, cleaned_cetes_dtms
         )
 
         # mbonos
-        reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = self.reorder_data(
-            cleaned_mbonos_pxs,
-            cleaned_mbonos_dtms,
-            cleaned_mbonos_coups
+        reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = (
+            self.reorder_data(
+                cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups
+            )
         )
 
         # --- convert mbono prices into yields ---
 
         reordered_bonos_ylds = self.prc_to_yld(
-            reordered_bonos_pxs,
-            reordered_bonos_dtms,
-            reordered_bonos_coups
+            reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups
         )
 
-        # --- parse summary data --- 
+        # --- parse summary data ---
 
         parsed_summary_data = self.parse_summary_data(banxico_data["summary"])
 
         # --- final yield curve data ---
 
         yield_curve_data = {
-            "cetes": {
-                "ylds" : reordered_cetes_ylds,
-                "dtms" : reordered_cetes_dtms
-            },
-            "mbonos": {
-                "ylds" : reordered_bonos_ylds,
-                "dtms" : reordered_bonos_dtms
-            }
+            "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
+            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms},
         }
-     
-        curve_labels, curve_dates, curve_yields, curve_dtms = self.get_labels_dates_yields(
-            yield_curve_data
+
+        curve_labels, curve_dates, curve_yields, curve_dtms = (
+            self.get_labels_dates_yields(yield_curve_data)
         )
 
         return curve_labels, curve_dates, curve_yields, curve_dtms, parsed_summary_data
@@ -218,15 +211,19 @@ class BanxicoDataFetcher:
             self.api_url_cetes_yld, headers=self.session.headers, timeout=10
         )
         if cetes_response_yld.status_code != 200:
-            logger.critical(f"Error acquiring cetes yield data: {cetes_response_yld.status_code}")
+            logger.critical(
+                f"Error acquiring cetes yield data: {cetes_response_yld.status_code}"
+            )
         cetes_response_yld.raise_for_status()
-        
+
         logger.debug("Fetching cetes days do maturity data.")
         cetes_response_dtm = self.session.get(
             self.api_url_cetes_dtm, headers=self.session.headers, timeout=10
         )
         if cetes_response_dtm.status_code != 200:
-            logger.critical(f"Error acquiring cetes dtm data: {cetes_response_dtm.status_code}")
+            logger.critical(
+                f"Error acquiring cetes dtm data: {cetes_response_dtm.status_code}"
+            )
         cetes_response_dtm.raise_for_status()
 
         # mbonos
@@ -235,7 +232,9 @@ class BanxicoDataFetcher:
             self.api_url_m_px, headers=self.session.headers, timeout=10
         )
         if mbonos_response_px.status_code != 200:
-            logger.critical(f"Error acquiring mbono price data: {mbonos_response_px.status_code}")
+            logger.critical(
+                f"Error acquiring mbono price data: {mbonos_response_px.status_code}"
+            )
         mbonos_response_px.raise_for_status()
 
         logger.debug("Fetching mbonos dtm data.")
@@ -243,7 +242,9 @@ class BanxicoDataFetcher:
             self.api_url_m_dtm, headers=self.session.headers, timeout=10
         )
         if mbonos_response_dtm.status_code != 200:
-            logger.critical(f"Error acquiring mbono dtm data: {mbonos_response_dtm.status_code}")
+            logger.critical(
+                f"Error acquiring mbono dtm data: {mbonos_response_dtm.status_code}"
+            )
         mbonos_response_dtm.raise_for_status()
 
         logger.debug("Fetching mbonos current coupon data.")
@@ -251,7 +252,9 @@ class BanxicoDataFetcher:
             self.api_url_m_coup, headers=self.session.headers, timeout=10
         )
         if mbonos_response_coup.status_code != 200:
-            logger.critical(f"Error acquiring mbono current coupon data: {mbonos_response_coup.status_code}")
+            logger.critical(
+                f"Error acquiring mbono current coupon data: {mbonos_response_coup.status_code}"
+            )
         mbonos_response_coup.raise_for_status()
 
         # summary data
@@ -267,7 +270,7 @@ class BanxicoDataFetcher:
 
         # --- parse responses ---
 
-        #cetes
+        # cetes
         cetes_yld_response_json = cetes_response_yld.json()["bmx"]["series"]
         cetes_dtm_response_json = cetes_response_dtm.json()["bmx"]["series"]
 
@@ -286,11 +289,11 @@ class BanxicoDataFetcher:
             "mbonos_dtm": m_dtm_response_json,
             "mbonos_coup": m_coup_response_json,
             "summary": summary_response_json,
-            }
+        }
 
         return returned_data
-    
-    def clean_returned_data(self, px_ylds, dtms, coups = None):
+
+    def clean_returned_data(self, px_ylds, dtms, coups=None):
 
         # covert to float returned prices, yields, and coupon rates
         # convert to int days to maturity
@@ -304,21 +307,23 @@ class BanxicoDataFetcher:
             logger.debug("Cleaning returned mbonos data.")
 
         for px_yld in clean_px_ylds:
-            px_yld["datos"][0]["dato"] = round(float(px_yld["datos"][0]["dato"]),6)
+            px_yld["datos"][0]["dato"] = round(float(px_yld["datos"][0]["dato"]), 6)
         for dtm in clean_dtms:
-            dtm["datos"][0]["dato"] = int(float(dtm["datos"][0]["dato"].replace(",","")))
+            dtm["datos"][0]["dato"] = int(
+                float(dtm["datos"][0]["dato"].replace(",", ""))
+            )
 
         if coups is None:
             return clean_px_ylds, clean_dtms
         else:
             clean_coups = copy.deepcopy(coups)
             for coup in clean_coups:
-                coup["datos"][0]["dato"] = round(float(coup["datos"][0]["dato"]),2)
+                coup["datos"][0]["dato"] = round(float(coup["datos"][0]["dato"]), 2)
             return clean_px_ylds, clean_dtms, clean_coups
 
-    
-
-    def reorder_data(self, yld_px_response_data, dtm_response_data, coup_response_data = None):
+    def reorder_data(
+        self, yld_px_response_data, dtm_response_data, coup_response_data=None
+    ):
 
         # ensure returned data is in order of increasing term to maturity
 
@@ -333,11 +338,13 @@ class BanxicoDataFetcher:
 
         def reorder_cetes(yld_response_data, dtm_response_data):
             returned_yld_maturities = [
-                self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie")) for y in yld_response_data
+                self.CETES_MATURITY_MAP_YLD.get(y.get("idSerie"))
+                for y in yld_response_data
             ]
 
             returned_dtm_maturities = [
-                self.CETES_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in dtm_response_data
+                self.CETES_MATURITY_MAP_DTM.get(y.get("idSerie"))
+                for y in dtm_response_data
             ]
 
             # define the desired order
@@ -346,10 +353,12 @@ class BanxicoDataFetcher:
 
             # get ranks of returned data
             maturity_ranks_yld = [
-                x[0] for x in sorted(list(enumerate(mat_in_days_yld)), key=lambda x: x[1])
+                x[0]
+                for x in sorted(list(enumerate(mat_in_days_yld)), key=lambda x: x[1])
             ]
             maturity_ranks_dtm = [
-                x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
+                x[0]
+                for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
             ]
 
             # reorder data
@@ -359,49 +368,65 @@ class BanxicoDataFetcher:
             return ordered_cetes_data_yld, ordered_cetes_data_dtm
 
         def reorder_bonos(px_response_data, dtm_response_data, coup_response_data):
-            
+
             returned_px_maturities = [
-                self.MBONOS_MATURITY_MAP_PX.get(y.get("idSerie")) for y in px_response_data
+                self.MBONOS_MATURITY_MAP_PX.get(y.get("idSerie"))
+                for y in px_response_data
             ]
 
             returned_dtm_maturities = [
-                self.MBONOS_MATURITY_MAP_DTM.get(y.get("idSerie")) for y in dtm_response_data
+                self.MBONOS_MATURITY_MAP_DTM.get(y.get("idSerie"))
+                for y in dtm_response_data
             ]
 
             returned_coup_maturities = [
-                self.MBONOS_MATURITY_MAP_COUP.get(y.get("idSerie")) for y in coup_response_data
+                self.MBONOS_MATURITY_MAP_COUP.get(y.get("idSerie"))
+                for y in coup_response_data
             ]
 
             # define the desired order
             mat_in_days_px = [convert_to_days(mat) for mat in returned_px_maturities]
             mat_in_days_dtm = [convert_to_days(mat) for mat in returned_dtm_maturities]
-            mat_in_days_coup = [convert_to_days(mat) for mat in returned_coup_maturities]
+            mat_in_days_coup = [
+                convert_to_days(mat) for mat in returned_coup_maturities
+            ]
 
             # get ranks of returned data
             maturity_ranks_px = [
-                x[0] for x in sorted(list(enumerate(mat_in_days_px)), key=lambda x: x[1])
+                x[0]
+                for x in sorted(list(enumerate(mat_in_days_px)), key=lambda x: x[1])
             ]
             maturity_ranks_dtm = [
-                x[0] for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
+                x[0]
+                for x in sorted(list(enumerate(mat_in_days_dtm)), key=lambda x: x[1])
             ]
             maturity_ranks_coup = [
-                x[0] for x in sorted(list(enumerate(mat_in_days_coup)), key=lambda x: x[1])
+                x[0]
+                for x in sorted(list(enumerate(mat_in_days_coup)), key=lambda x: x[1])
             ]
 
             # reorder data
             ordered_bonos_data_px = [px_response_data[x] for x in maturity_ranks_px]
             ordered_bonos_data_dtm = [dtm_response_data[x] for x in maturity_ranks_dtm]
-            ordered_bonos_data_coup = [coup_response_data[x] for x in maturity_ranks_coup]
+            ordered_bonos_data_coup = [
+                coup_response_data[x] for x in maturity_ranks_coup
+            ]
 
-            return ordered_bonos_data_px, ordered_bonos_data_dtm, ordered_bonos_data_coup
+            return (
+                ordered_bonos_data_px,
+                ordered_bonos_data_dtm,
+                ordered_bonos_data_coup,
+            )
 
         if not coup_response_data:
             logger.debug("Reordering cetes data.")
             return reorder_cetes(yld_px_response_data, dtm_response_data)
-            
+
         else:
             logger.debug("Reordering bonos data.")
-            return reorder_bonos(yld_px_response_data, dtm_response_data, coup_response_data)
+            return reorder_bonos(
+                yld_px_response_data, dtm_response_data, coup_response_data
+            )
 
     def parse_summary_data(self, summary_response_data):
 
@@ -417,7 +442,7 @@ class BanxicoDataFetcher:
             parsed_summary[metric] = {"value": value, "date": dt}
 
         return parsed_summary
-    
+
     def prc_to_yld(self, prices, dtms, coups):
 
         logger.debug("Converting mbono clean prices into yields.")
@@ -428,7 +453,7 @@ class BanxicoDataFetcher:
         pxs_ = [x["datos"][0]["dato"] for x in pxs]
         dtms_ = [x["datos"][0]["dato"] for x in dtms]
         coups_ = [x["datos"][0]["dato"] for x in coups]
-        
+
         reordered_bonos_yields = cpp_engine.price_to_yield(pxs_, dtms_, coups_)
 
         for i, px in enumerate(pxs):
@@ -453,14 +478,18 @@ class BanxicoDataFetcher:
             curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")))
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
-            curve_dtms.append(curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato"))
+            curve_dtms.append(
+                curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")
+            )
 
         # mbonos
         for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
             curve_labels.append(self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")))
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
-            curve_dtms.append(curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato"))
+            curve_dtms.append(
+                curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato")
+            )
 
         return curve_labels, curve_dates, curve_yields, curve_dtms
 
