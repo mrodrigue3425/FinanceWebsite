@@ -73,7 +73,8 @@ def fi_dashboard():
         logger.error("Network or timeout error fetching data from Banxico API.")
         logger.exception(e)
         error_data = {
-            "message": "Connection failed. This could be due to an issue with the Banxico API or your network.",
+            "message": "Connection failed. This could be due to an issue with the\
+                  Banxico API or your network.",
             "code": 504,
             "reason": "Gateway Timeout",
         }

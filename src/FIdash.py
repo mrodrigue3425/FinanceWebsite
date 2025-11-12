@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 import requests
-from flask import Flask
 import logging
 import cpp_engine
 import copy
@@ -494,4 +493,5 @@ class BanxicoDataFetcher:
         return curve_labels, curve_dates, curve_yields, curve_dtms
 
     def __repr__(self):
-        return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, {len(self.MBONOS_MATURITY_MAP_PX.keys())} mbonos , {len(self.SUMMARY_MAP.keys())} summary stats)>"
+        return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, \
+{len(self.MBONOS_MATURITY_MAP_PX.keys())} mbonos , {len(self.SUMMARY_MAP.keys())} summary stats)>"

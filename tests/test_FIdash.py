@@ -571,7 +571,8 @@ def generate_random_API_responses(n):
         rand_order_summary = random.sample(range(6), 6)
 
         # establish other random data
-        rand_date = f"{random.randrange(1,29)}/{random.randrange(1,13)}/{random.randrange(2000,2026)}"
+        rand_date = f"{random.randrange(1,29)}/{random.randrange(1,13)}\
+/{random.randrange(2000,2026)}"
 
         # generate random mbonos and cetes data
         for i in range(5):
