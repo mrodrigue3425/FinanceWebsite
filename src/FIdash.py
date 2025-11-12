@@ -4,6 +4,7 @@ import requests
 from flask import Flask
 import logging
 import cpp_engine
+import copy
 
 
 # load environment variables from .env file
@@ -294,8 +295,8 @@ class BanxicoDataFetcher:
         # covert to float returned prices, yields, and coupon rates
         # convert to int days to maturity
 
-        clean_px_ylds = px_ylds.copy()
-        clean_dtms = dtms.copy()
+        clean_px_ylds = copy.deepcopy(px_ylds)
+        clean_dtms = copy.deepcopy(dtms)
 
         if coups is None:
             logger.debug("Cleaning returned cetes data.")
@@ -310,7 +311,7 @@ class BanxicoDataFetcher:
         if coups is None:
             return clean_px_ylds, clean_dtms
         else:
-            clean_coups = coups.copy()
+            clean_coups = copy.deepcopy(coups)
             for coup in clean_coups:
                 coup["datos"][0]["dato"] = round(float(coup["datos"][0]["dato"]),2)
             return clean_px_ylds, clean_dtms, clean_coups
@@ -422,16 +423,18 @@ class BanxicoDataFetcher:
         logger.debug("Converting mbono clean prices into yields.")
 
         # convert mbono clean prices into yields
-        yields = prices.copy()
+        pxs = copy.deepcopy(prices)
 
-        pxs = [x["datos"][0]["dato"] for x in prices]
-        dtms = [x["datos"][0]["dato"] for x in dtms]
-        coups = [x["datos"][0]["dato"] for x in coups]
+        pxs_ = [x["datos"][0]["dato"] for x in pxs]
+        dtms_ = [x["datos"][0]["dato"] for x in dtms]
+        coups_ = [x["datos"][0]["dato"] for x in coups]
         
-        reordered_bonos_yields = cpp_engine.price_to_yield(pxs, dtms, coups)
+        reordered_bonos_yields = cpp_engine.price_to_yield(pxs_, dtms_, coups_)
 
-        for i, yld in enumerate(yields):
-            yld["datos"][0]["dato"] = reordered_bonos_yields[i]
+        for i, px in enumerate(pxs):
+            px["datos"][0]["dato"] = reordered_bonos_yields[i]
+
+        yields = pxs
 
         return yields
 
