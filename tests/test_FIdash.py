@@ -330,50 +330,143 @@ def test_cpp_price_to_yield():
 
 def test_get_labels_dates_yields():
     test_object = FIdash.BanxicoDataFetcher()
-    cetes_data = [
-        {
-            "idSerie": "SF45470",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 28 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.399977"}],
-        },
-        {
-            "idSerie": "SF45471",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 91 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.310613"}],
-        },
-        {
-            "idSerie": "SF45472",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 182 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.409998"}],
-        },
-        {
-            "idSerie": "SF45473",
-            "titulo": "Vector de precios de títulos gubernamentales Cetes 364 días - Tasa Rendimiento",
-            "datos": [{"fecha": "20/10/2025", "dato": "7.500388"}],
-        },
-    ]
 
-    curve_labels, curve_dates, curve_yields = test_object.get_labels_dates_yields(
-        cetes_data
-    )
+    # generate random data
+    banxico_data_many = generate_random_API_responses(100)
 
-    for i, tenor in enumerate(cetes_data):
-        expected_label = test_object.CETES_MATURITY_MAP.get(tenor.get("idSerie"))
-        expected_date = tenor.get("datos")[0].get("fecha")
-        expected_yield = np.round(float(tenor.get("datos")[0].get("dato")), 6)
+    for banxico_data in banxico_data_many:
+        # cetes
+        cleaned_cetes_ylds, cleaned_cetes_dtms = test_object.clean_returned_data(
+            banxico_data["cetes_yld"],
+            banxico_data["cetes_dtm"]
+        )
 
-        assert curve_labels[i] == expected_label
-        assert curve_dates[i] == expected_date
-        assert curve_yields[i] == expected_yield
+        # mbonos 
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = test_object.clean_returned_data(
+            banxico_data["mbonos_px"],
+            banxico_data["mbonos_dtm"],
+            banxico_data["mbonos_coup"]
+        )
 
-        try:
-            # Attempt to parse the string using the format code
-            parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
-            assert isinstance(parsed_date, datetime)
-        except ValueError:
-            assert (
-                False
-            ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+        # --- reorder returned data ---
+
+        # cetes
+        reordered_cetes_ylds, reordered_cetes_dtms = test_object.reorder_data(
+            cleaned_cetes_ylds,
+            cleaned_cetes_dtms
+        )
+
+        # mbonos
+        reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = test_object.reorder_data(
+            cleaned_mbonos_pxs,
+            cleaned_mbonos_dtms,
+            cleaned_mbonos_coups
+        )
+
+        # --- convert mbono prices into yields ---
+
+        reordered_bonos_ylds = test_object.prc_to_yld(
+            reordered_bonos_pxs,
+            reordered_bonos_dtms,
+            reordered_bonos_coups
+        )
+
+        # --- final yield curve data ---
+
+        yield_curve_data = {
+            "cetes": {
+                "ylds" : reordered_cetes_ylds,
+                "dtms" : reordered_cetes_dtms
+            },
+            "mbonos": {
+                "ylds" : reordered_bonos_ylds,
+                "dtms" : reordered_bonos_dtms
+            }
+        }
+     
+        curve_labels, curve_dates, curve_yields, curve_dtms = test_object.get_labels_dates_yields(
+            yield_curve_data
+        )
+
+        # --- test cetes --- 
+
+        # yields
+        for i, tenor in enumerate(reordered_cetes_ylds):
+            expected_label = test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_yield = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i] == expected_label
+            assert curve_dates[i] == expected_date
+            assert curve_yields[i] == expected_yield
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+        # dtms
+        for i, tenor in enumerate(reordered_cetes_dtms):
+            expected_label = test_object.CETES_MATURITY_MAP_DTM.get(tenor.get("idSerie"))
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_dtm = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i] == expected_label
+            assert curve_dates[i] == expected_date
+            assert curve_dtms[i] == expected_dtm
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+        # --- test mbonos --- 
+
+        # yields
+        for i, tenor in enumerate(reordered_bonos_ylds):
+            expected_label = test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_yield = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i+5] == expected_label
+            assert curve_dates[i+5] == expected_date
+            assert curve_yields[i+5] == expected_yield
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+        # dtms
+        for i, tenor in enumerate(reordered_bonos_dtms):
+            expected_label = test_object.MBONOS_MATURITY_MAP_DTM.get(tenor.get("idSerie"))
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_dtm = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i+5] == expected_label
+            assert curve_dates[i+5] == expected_date
+            assert curve_dtms[i+5] == expected_dtm
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
 
 
 def generate_random_API_responses(n):
