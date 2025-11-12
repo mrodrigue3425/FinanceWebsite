@@ -26,16 +26,45 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             "UDI_MXN": {"value": 8.586547, "date": "10/11/2025"},
             "Inflation": {"value": 3.76, "date": "01/09/2025"},
         }
-        curve_labels = ["28 Days", "91 Days", "182 Days", "364 Days", "2 Years"]
+        curve_labels = [
+            "28 Days",
+            "91 Days",
+            "182 Days",
+            "364 Days",
+            "2 Years",
+            "3 Years",
+            "5 Years",
+            "10 Years",
+            "20 Years",
+            "30 Years",
+        ]
         curve_dates = [
             "27/10/2025",
             "27/10/2025",
             "27/10/2025",
             "27/10/2025",
             "27/10/2025",
+            "27/10/2025",
+            "27/10/2025",
+            "27/10/2025",
+            "27/10/2025",
+            "27/10/2025",
         ]
-        curve_yields = [7.000015, 7.28126, 7.345685, 7.418118, 7.679998]
-        return curve_labels, curve_dates, curve_yields, mock_summary
+        curve_yields = [
+            7.000015,
+            7.28126,
+            7.345685,
+            7.418118,
+            7.679998,
+            7.000015,
+            7.28126,
+            7.345685,
+            7.418118,
+            7.679998,
+        ]
+
+        curve_dtms = [28, 91, 182, 364, 720, 1100, 1825, 3650, 7300, 10950]
+        return curve_labels, curve_dates, curve_yields, curve_dtms, mock_summary
 
 
 class MockConnectionErrorFetcher:

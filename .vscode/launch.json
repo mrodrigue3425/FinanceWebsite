@@ -44,6 +44,47 @@
             ],
             "cwd": "${workspaceFolder}",
             "justMyCode": true
+        },
+        {
+            "name": "C++: Debug cpp_engine via Python",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:python.interpreterPath}",  // path to your Python interpreter
+            "args": ["-c", "import cpp_engine; cpp_engine.price_to_yield([102.643974, 102.129601, 97.313866, 90.112654, 88.326678], [874, 1602, 2785, 6243, 10156], [8.500000, 8.500000, 7.500000, 7.750000, 8.000000])"],  // calls your C++ entry function
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build C++ module"
+        },
+        {
+            "name": "C++: Debug Experiment",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/cpp_engine/experiment",
+            "args": [],
+            "stopAtEntry": false, 
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb", 
+            "preLaunchTask": "Compile Experiment Executable (C++) in cpp_engine"
         }
     ]
 }

@@ -64,7 +64,7 @@ def fi_dashboard():
 
     # try get banxico data
     try:
-        curve_labels, curve_dates, curve_yields, summary_data = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, summary_data = (
             banxico_data_fetcher.get_data()
         )
         logger.info("Retrieved data from Banxico API successfully.")
@@ -73,7 +73,8 @@ def fi_dashboard():
         logger.error("Network or timeout error fetching data from Banxico API.")
         logger.exception(e)
         error_data = {
-            "message": "Connection failed. This could be due to an issue with the Banxico API or your network.",
+            "message": "Connection failed. This could be due to an issue with the\
+                  Banxico API or your network.",
             "code": 504,
             "reason": "Gateway Timeout",
         }
@@ -116,6 +117,7 @@ def fi_dashboard():
         curve_labels=curve_labels,
         curve_dates=curve_dates,
         curve_yields=curve_yields,
+        curve_dtms=curve_dtms,
         summary_data=summary_data,
     )
 

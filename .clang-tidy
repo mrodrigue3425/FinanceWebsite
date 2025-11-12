@@ -1,0 +1,34 @@
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  readability-const-return-type,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-simplify-boolean-expr,
+  modernize-use-nullptr,
+  modernize-use-auto,
+  modernize-loop-convert,
+  misc-const-correctness,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-narrowing-conversions
+
+
+HeaderFilterRegex: 'cpp_engine/(price_to_yield|binding)\.(cpp|h)|cpp_engine/tests/test_price_to_yield\.cpp'
+
+CheckOptions:
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: '1'
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: '1'
+  - key: readability-identifier-length.MinimumLoopCounterNameLength
+    value: '1'
+  - key: readability-magic-numbers.IgnoredValues
+    value: '0,1,2,6,10,100,0.01,2e-6'
+  - key: misc-const-correctness.WarnOnly
+    value: true
+  - key: clang-tidy-output-summary
+    value: true 
+
+WarningsAsErrors: ''
+FormatStyle: file

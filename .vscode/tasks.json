@@ -2,12 +2,32 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build C++ module",
+            "type": "shell",
+            "command": "python setup.py build_ext",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
             "label": "Start Flask Server",
             "type": "shell",
             "command": "${command:python.interpreterPath}",
             "args": [
-                "-m",      
-                "flask",    
+                "-m",
+                "flask",
                 "run",
                 "--debug"
             ],
@@ -27,6 +47,100 @@
                 "panel": "new"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Clean C++ module",
+            "type": "shell",
+            "command": "rm -f cpp_engine/*.so && rm -rf build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build C++ module",
+            "type": "shell",
+            "command": "${command:python.interpreterPath}",
+            "args": ["setup.py", "build_ext", "--inplace"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Clean C++ module",
+            "problemMatcher": []
+        },
+        {
+            "label": "Compile Experiment Executable (C++) in cpp_engine",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/cpp_engine/experiment"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/cpp_engine"
+            },
+            "group": "build", 
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated", 
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run cpp_engine tests",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "g++ -std=c++17 cpp_engine/tests/test_price_to_yield.cpp cpp_engine/price_to_yield.cpp -o cpp_engine/tests/test_price_to_yield -lgtest -lgtest_main -pthread && ./cpp_engine/tests/test_price_to_yield"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "problemMatcher": [],
+            "detail": "Builds and runs all GoogleTest-based C++ tests in cpp_engine."
+        },
+        {
+            "label": "C++: clang-tidy (cpp_engine)",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "PY_INC=$(python -c \"import sysconfig; print(sysconfig.get_path(\\\"include\\\"))\"); clang-tidy cpp_engine/*.cpp cpp_engine/tests/*.cpp -- -std=c++17 -I${PY_INC} -I./cpp_engine 2>&1 | grep -v Suppressed | grep -v cpp_engine/experiment.cpp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "C++: clang-format (cpp_engine)",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "find cpp_engine tests -type f \\( -name '*.cpp' -o -name '*.h' \\) -exec clang-format -i {} +"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
         }
+     
     ]
 }
