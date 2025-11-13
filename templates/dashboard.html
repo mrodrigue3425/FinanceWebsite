@@ -186,6 +186,23 @@
                         }
                     },
                     plugins: {
+                        tooltip: {
+                            displayColors: false,
+                            callbacks: {
+                                title: function (context) {
+                                    const index = context[0].dataIndex;
+                                    return dynamicLabels[index];
+                                },
+                                label: function (context) {
+                                    const yieldValue = context.parsed.y;
+                                    const dtmValue = dynamicDTMs[context.dataIndex];
+                                    return [
+                                        `Yield: ${yieldValue.toFixed(6)}%`,
+                                        `Days to Maturity: ${dtmValue}`
+                                    ];
+                                }
+                            }
+                        },
                         legend: { display: false },
                         title: { display: false }
                     },
@@ -194,13 +211,13 @@
                             type: 'linear',
                             title: {
                                 display: true,
-                                text: 'Maturity'
+                                text: 'Term to Maturity (Years)'
                             }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'Yield (%)'
+                                text: 'Yield to Maturity (%)'
                             }
                         }
                     }
