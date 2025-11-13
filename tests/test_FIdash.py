@@ -432,10 +432,10 @@ def test_get_labels_dates_yields():
 
         yield_curve_data = {
             "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
-            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms},
+            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms, "pxs": reordered_bonos_pxs},
         }
 
-        curve_labels, curve_dates, curve_yields, curve_dtms = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs = (
             test_object.get_labels_dates_yields(yield_curve_data)
         )
 
@@ -462,17 +462,20 @@ def test_get_labels_dates_yields():
                     False
                 ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
 
-        # dtms
+        # dtms and pxs
         for i, tenor in enumerate(reordered_cetes_dtms):
             expected_label = test_object.CETES_MATURITY_MAP_DTM.get(
                 tenor.get("idSerie")
             ) + " CETES"
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_dtm = tenor.get("datos")[0].get("dato")
+            expected_yld = reordered_cetes_ylds[i].get("datos")[0].get("dato")
+            expected_px = 10/(1+(expected_dtm*expected_yld)/36000)
 
             assert curve_labels[i] == expected_label
             assert curve_dates[i] == expected_date
             assert curve_dtms[i] == expected_dtm
+            assert curve_pxs[i] == expected_px
 
             try:
                 # Attempt to parse the string using the format code
@@ -517,6 +520,27 @@ def test_get_labels_dates_yields():
             assert curve_labels[i + 5] == expected_label
             assert curve_dates[i + 5] == expected_date
             assert curve_dtms[i + 5] == expected_dtm
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+        # pxs
+        for i, tenor in enumerate(reordered_bonos_pxs):
+            expected_label = test_object.MBONOS_MATURITY_MAP_PX.get(
+                tenor.get("idSerie")
+            ) + " MBONOS"
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_px = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i + 5] == expected_label
+            assert curve_dates[i + 5] == expected_date
+            assert curve_pxs[i + 5] == expected_px
 
             try:
                 # Attempt to parse the string using the format code

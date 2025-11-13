@@ -63,8 +63,22 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             7.679998,
         ]
 
+        curve_pxs = [
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+        ]
+
         curve_dtms = [28, 91, 182, 364, 720, 1100, 1825, 3650, 7300, 10950]
-        return curve_labels, curve_dates, curve_yields, curve_dtms, mock_summary
+
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, mock_summary
 
 
 class MockConnectionErrorFetcher:
