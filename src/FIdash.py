@@ -24,49 +24,49 @@ class BanxicoDataFetcher:
 
     # cetes yields
     CETES_MATURITY_MAP_YLD = {
-        "SF45470": "28 Days",
-        "SF45471": "91 Days",
-        "SF45472": "182 Days",
-        "SF45473": "364 Days",
-        "SF349889": "2 Years",
+        "SF45470": "28D",
+        "SF45471": "91D",
+        "SF45472": "182D",
+        "SF45473": "364D",
+        "SF349889": "2Y",
     }
 
     # cetes days to maturity
     CETES_MATURITY_MAP_DTM = {
-        "SF45422": "28 Days",
-        "SF45423": "91 Days",
-        "SF45424": "182 Days",
-        "SF45425": "364 Days",
-        "SF349886": "2 Years",
+        "SF45422": "28D",
+        "SF45423": "91D",
+        "SF45424": "182D",
+        "SF45425": "364D",
+        "SF349886": "2Y",
     }
 
     # --- mbono data Banxico API series ids ---
 
     # mbono dirty prices
     MBONOS_MATURITY_MAP_PX = {
-        "SF45448": "3 Years",
-        "SF45450": "5 Years",
-        "SF45454": "10 Years",
-        "SF45456": "20 Years",
-        "SF60721": "30 Years",
+        "SF45448": "3Y",
+        "SF45450": "5Y",
+        "SF45454": "10Y",
+        "SF45456": "20Y",
+        "SF60721": "30Y",
     }
 
     # mbono days to maturity
     MBONOS_MATURITY_MAP_DTM = {
-        "SF45427": "3 Years",
-        "SF45428": "5 Years",
-        "SF45430": "10 Years",
-        "SF45431": "20 Years",
-        "SF60720": "30 Years",
+        "SF45427": "3Y",
+        "SF45428": "5Y",
+        "SF45430": "10Y",
+        "SF45431": "20Y",
+        "SF60720": "30Y",
     }
 
     # mbono current coupons
     MBONOS_MATURITY_MAP_COUP = {
-        "SF45475": "3 Years",
-        "SF45476": "5 Years",
-        "SF45478": "10 Years",
-        "SF45479": "20 Years",
-        "SF60723": "30 Years",
+        "SF45475": "3Y",
+        "SF45476": "5Y",
+        "SF45478": "10Y",
+        "SF45479": "20Y",
+        "SF60723": "30Y",
     }
 
     # --- summary data Banxico API series ids ---
@@ -327,11 +327,12 @@ class BanxicoDataFetcher:
         # ensure returned data is in order of increasing term to maturity
 
         def convert_to_days(maturity_str):
-            parts = maturity_str.split(" ")
-            if parts[1].lower() == "days":
-                return int(parts[0])
-            elif parts[1].lower() == "years":
-                return int(parts[0]) * 364
+            day_or_year = maturity_str[-1]
+            num = maturity_str[:-1]
+            if day_or_year.lower() == "d":
+                return int(num)
+            elif day_or_year.lower() == "y":
+                return int(num) * 364
             else:
                 raise ValueError(f"Unknown maturity format: {maturity_str}")
 
