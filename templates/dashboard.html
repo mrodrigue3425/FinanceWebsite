@@ -144,11 +144,12 @@
             const dynamicLabels = JSON.parse('{{curve_labels | tojson | safe}}')
             const dynamicRates = JSON.parse('{{curve_yields | tojson | safe}}')
             const dynamicDTMs = JSON.parse('{{curve_dtms | tojson | safe}}');
+            const dynamicPrices = JSON.parse('{{curve_pxs | tojson | safe}}');
 
             const yieldCurveData = {
                 labels: dynamicLabels,
                 rates: dynamicRates,
-                dtms: dynamicDTMs
+                dtms: dynamicDTMs,
             };
 
             const points = dynamicDTMs.map((dtm, i) => ({
@@ -196,8 +197,10 @@
                                 label: function (context) {
                                     const yieldValue = context.parsed.y;
                                     const dtmValue = dynamicDTMs[context.dataIndex];
+                                    const pxValue = dynamicPrices[context.dataIndex];
                                     return [
                                         `Yield: ${yieldValue.toFixed(6)}%`,
+                                        `Clean Price: MXN ${pxValue.toFixed(6)}`,
                                         `Days to Maturity: ${dtmValue}`
                                     ];
                                 }
