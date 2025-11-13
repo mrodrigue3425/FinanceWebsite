@@ -142,27 +142,36 @@
         window.onload = function() {
             
             const dynamicLabels = JSON.parse('{{curve_labels | tojson | safe}}')
-            const dynamicRates = JSON.parse('{{curve_yields | tojson | safe}}');
+            const dynamicRates = JSON.parse('{{curve_yields | tojson | safe}}')
+            const dynamicDTMs = JSON.parse('{{curve_dtms | tojson | safe}}');
 
             const yieldCurveData = {
                 labels: dynamicLabels,
-                rates: dynamicRates
+                rates: dynamicRates,
+                dtms: dynamicDTMs
             };
+
+            const points = dynamicDTMs.map((dtm, i) => ({
+                x: dtm,
+                y: dynamicRates[i]
+                }));
 
             const yieldCurve = document.getElementById('yieldCurveChart').getContext('2d');
             new Chart(yieldCurve, {
                 type: 'line',
                 data: {
                     labels: yieldCurveData.labels,
-                    datasets: [{
-                        label: 'Yield (%)',
-                        data: yieldCurveData.rates,
-                        borderColor: '#0d6efd', // Bootstrap Primary color
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        tension: 0.3, // Curve the line slightly
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
+                    datasets: [
+                        {
+                            label: 'Yield (%)',
+                            data: points,
+                            borderColor: '#0d6efd', 
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.3, // Curve the line slightly
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -179,40 +188,21 @@
                     plugins: {
                         legend: { display: false },
                         title: { display: false }
-                    }
-                }
-            });
-
-            const timeSeries = document.getElementById('timeSeriesChart').getContext('2d');
-            new Chart(timeSeries, {
-                type: 'line',
-                data: {
-                    labels: yieldCurveData.labels,
-                    datasets: [{
-                        label: 'Yield (%)',
-                        data: yieldCurveData.rates,
-                        borderColor: '#0d6efd', // Bootstrap Primary color
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        tension: 0.3, // Curve the line slightly
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: { display: true, text: 'Yield (%)' },
-                            beginAtZero: false
-                        },
-                        x: {
-                            title: { display: true, text: 'Maturity' }
-                        }
                     },
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: false }
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Maturity'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Yield (%)'
+                            }
+                        }
                     }
                 }
             });
