@@ -475,7 +475,7 @@ class BanxicoDataFetcher:
 
         # cetes
         for i, tenor in enumerate(curve_dict.get("cetes").get("ylds")):
-            curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")))
+            curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")) + " CETES")
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
             curve_dtms.append(
@@ -484,7 +484,7 @@ class BanxicoDataFetcher:
 
         # mbonos
         for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
-            curve_labels.append(self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")))
+            curve_labels.append(self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")) + " MBONOS")
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
             curve_dtms.append(
