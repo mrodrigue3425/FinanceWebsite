@@ -445,7 +445,7 @@ def test_get_labels_dates_yields():
         for i, tenor in enumerate(reordered_cetes_ylds):
             expected_label = test_object.CETES_MATURITY_MAP_YLD.get(
                 tenor.get("idSerie")
-            )
+            ) + " CETES"
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_yield = tenor.get("datos")[0].get("dato")
 
@@ -466,7 +466,7 @@ def test_get_labels_dates_yields():
         for i, tenor in enumerate(reordered_cetes_dtms):
             expected_label = test_object.CETES_MATURITY_MAP_DTM.get(
                 tenor.get("idSerie")
-            )
+            ) + " CETES"
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_dtm = tenor.get("datos")[0].get("dato")
 
@@ -489,7 +489,7 @@ def test_get_labels_dates_yields():
         for i, tenor in enumerate(reordered_bonos_ylds):
             expected_label = test_object.MBONOS_MATURITY_MAP_PX.get(
                 tenor.get("idSerie")
-            )
+            ) + " MBONOS"
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_yield = tenor.get("datos")[0].get("dato")
 
@@ -510,7 +510,7 @@ def test_get_labels_dates_yields():
         for i, tenor in enumerate(reordered_bonos_dtms):
             expected_label = test_object.MBONOS_MATURITY_MAP_DTM.get(
                 tenor.get("idSerie")
-            )
+            ) + " MBONOS"
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_dtm = tenor.get("datos")[0].get("dato")
 
