@@ -192,16 +192,16 @@ def test_reorder_data():
                 int(
                     test_object.CETES_MATURITY_MAP_YLD.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 if test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))
-                .split()[1]
+                [-1]
                 .lower()
-                == "days"
+                == "d"
                 else int(
                     test_object.CETES_MATURITY_MAP_YLD.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 * 364
             )
@@ -275,16 +275,16 @@ def test_reorder_data():
                 int(
                     test_object.MBONOS_MATURITY_MAP_PX.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 if test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))
-                .split()[1]
+                .split()[-1]
                 .lower()
-                == "days"
+                == "d"
                 else int(
                     test_object.MBONOS_MATURITY_MAP_PX.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 * 364
             )
@@ -299,16 +299,16 @@ def test_reorder_data():
                 int(
                     test_object.MBONOS_MATURITY_MAP_COUP.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 if test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))
-                .split()[1]
+                [-1]
                 .lower()
-                == "days"
+                == "d"
                 else int(
                     test_object.MBONOS_MATURITY_MAP_COUP.get(
                         tenor.get("idSerie")
-                    ).split()[0]
+                    )[:-1]
                 )
                 * 364
             )
@@ -535,11 +535,12 @@ def generate_random_API_responses(n):
     random.seed(42)
 
     def convert_to_days(maturity_str):
-        parts = maturity_str.split(" ")
-        if parts[1].lower() == "days":
-            return int(parts[0])
-        elif parts[1].lower() == "years":
-            return int(parts[0]) * 364
+        day_or_year = maturity_str[-1]
+        num = maturity_str[:-1]
+        if day_or_year.lower() == "d":
+            return int(num)
+        elif day_or_year.lower() == "y":
+            return int(num) * 364
         else:
             raise ValueError(f"Unknown maturity format: {maturity_str}")
 
