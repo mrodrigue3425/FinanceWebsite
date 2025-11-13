@@ -191,14 +191,14 @@ class BanxicoDataFetcher:
 
         yield_curve_data = {
             "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
-            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms},
+            "mbonos": {"ylds": reordered_bonos_ylds, "pxs": reordered_bonos_pxs,  "dtms": reordered_bonos_dtms},
         }
 
-        curve_labels, curve_dates, curve_yields, curve_dtms = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs = (
             self.get_labels_dates_yields(yield_curve_data)
         )
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, parsed_summary_data
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, parsed_summary_data
 
     def call_api(self):
 
@@ -465,6 +465,10 @@ class BanxicoDataFetcher:
 
     def get_labels_dates_yields(self, curve_dict):
 
+        def yield_to_price(yld,d):
+            px = 10/(1+((yld*d)/36000))
+            return px
+
         # get labels, dates, and yields to parse in html
         logger.debug("Getting labels, dates, yields and dtms.")
 
@@ -472,6 +476,7 @@ class BanxicoDataFetcher:
         curve_dates = []
         curve_yields = []
         curve_dtms = []
+        curve_pxs = []
 
         # cetes
         for i, tenor in enumerate(curve_dict.get("cetes").get("ylds")):
@@ -481,6 +486,7 @@ class BanxicoDataFetcher:
             curve_dtms.append(
                 curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")
             )
+            curve_pxs.append(yield_to_price(tenor.get("datos")[0].get("dato"),curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")))
 
         # mbonos
         for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
@@ -490,8 +496,9 @@ class BanxicoDataFetcher:
             curve_dtms.append(
                 curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato")
             )
+            curve_pxs.append(curve_dict.get("mbonos").get("pxs")[i].get("datos")[0].get("dato"))
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs
 
     def __repr__(self):
         return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, \
