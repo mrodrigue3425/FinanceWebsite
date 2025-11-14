@@ -327,6 +327,9 @@ def test_reorder_data():
 
 
 def test_prc_to_yld():
+    '''
+        input MAX PRECISION (15dp) generated yields into pricing formula and compare ouputs with original prices
+    '''
 
     test_object = FIdash.BanxicoDataFetcher()
 
@@ -368,6 +371,69 @@ def test_prc_to_yld():
         pxs_to_compare = []
         for i in range(len(ylds)):
             pxs_to_compare.append(round(yld_to_px(TCs[i], ylds[i], Ks[i], ds[i]), 6))
+
+        pxs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_pxs]
+
+        assert pxs == pxs_to_compare
+
+def test_prc_to_yld_min_precision():
+
+    '''
+        Determine minimum precision required on computed yields
+        to always produce prices (when input into pricing formula)
+        accurate to 6dp compared to original input prices. 
+
+        Note: 
+        - set API responses to 1000 to reduce pytest execution time.
+        - 1000 sufficient to trigger assertion error at 7dp precision.
+        - 8dp precision passes w/ 1000 and 10000 API responses aswell.
+    '''
+
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    banxico_data_many = generate_random_API_responses(1000)
+
+    for banxico_data in banxico_data_many:
+
+        # mbonos
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
+            test_object.clean_returned_data(
+                banxico_data["mbonos_px"],
+                banxico_data["mbonos_dtm"],
+                banxico_data["mbonos_coup"],
+            )
+        )
+
+        # --- reorder returned data ---
+
+        # mbonos
+        reordered_mbonos_pxs, reordered_mbonos_dtms, reordered_mbonos_coups = (
+            test_object.reorder_data(
+                cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups
+            )
+        )
+
+        # --- convert mbono prices into yields ---
+
+        reordered_bonos_ylds = test_object.prc_to_yld(
+            reordered_mbonos_pxs, reordered_mbonos_dtms, reordered_mbonos_coups
+        )
+
+        ylds = [x.get("datos")[0].get("dato") for x in reordered_bonos_ylds]
+
+        TCs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_coups]
+        ds = find_d([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+        Ks = find_k([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+
+        # find precision necessary to always match acquired yield with input price
+
+        precision = 8 # ADJUST PRECISION HERE
+        rounded_ylds = [round(yld, precision) for yld in ylds]
+
+        pxs_to_compare = []
+        for i in range(len(ylds)):
+            pxs_to_compare.append(round(yld_to_px(TCs[i], rounded_ylds[i], Ks[i], ds[i]), 6))
 
         pxs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_pxs]
 
