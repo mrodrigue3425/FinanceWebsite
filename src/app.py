@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from . import FIdash
 import os
 import sys
@@ -136,7 +136,7 @@ def options_pricer():
 @app.errorhandler(404)
 def not_found_error(e):
     # log the not found error
-    logger.warning("Page not found")
+    logger.warning(f"Page not found {request.path}")
 
     error_data = {"message": "Page not found.", "code": 404, "reason": "Not Found"}
     return handle_error(error_data)
