@@ -16,7 +16,7 @@
 <!-- Use d-flex and min-vh-100 to enable sticky footer behavior (before fixed-bottom) -->
 <body class="bg-light min-vh-100 d-flex flex-column">
 
-    <!-- Bootstrap Navbar - Common Navigation Structure -->
+    <!-- Navbar  -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <!-- Home Button (Top Left) -->
@@ -30,7 +30,9 @@
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <!-- ms-auto pushes the menu items to the right -->
                 <ul class="navbar-nav ms-auto"> 
-                    <li class="nav-item dropdown">
+                    
+                    <!-- Desktop Menu -->
+                    <li class="nav-item dropdown d-none d-lg-block">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Menu
                         </a>
@@ -38,9 +40,21 @@
                             <li><a class="dropdown-item" href="/fi_dashboard">FI Dashboard</a></li>
                             <li><a class="dropdown-item" href="/options_pricing">Options Pricer</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><a class="dropdown-item" href="#">About</a></li>
                         </ul>
                     </li>
+
+                    <!--  Mobile Menu: Flat List -->
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link" href="/fi_dashboard">FI Dashboard</a>
+                    </li>
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link" href="/options_pricing">Options Pricer</a>
+                    </li>
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+
                 </ul>
             </div>
         </div>
