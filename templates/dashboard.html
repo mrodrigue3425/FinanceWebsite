@@ -4,22 +4,7 @@
 
 {% block head %}
     {{ super() }}
-    <!-- Custom CSS to make the charts taller -->
-
-    <!-- Sets the browser tab title for the homepage -->
-    
-    <style>
-        /* Defines a fixed height for large chart containers */
-        .chart-lg-height {
-            height: 500px; /* Adjust this value (e.g., 600px) if you want them even taller */
-        }
-        /* Ensure the canvas fills its container */
-        .card-body canvas {
-            height: 100% ;
-            width: 100% ;
-        }
-    </style>
-
+    <!-- For the chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     
 {% endblock %}
