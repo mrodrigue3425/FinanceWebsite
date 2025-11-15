@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 current_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.dirname(current_dir)
 template_path = os.path.join(project_root, "templates")
+static_path = os.path.join(project_root, "static")
 
 # --- Initialisations ---
 
@@ -38,7 +39,11 @@ except Exception as e:
     banxico_data_fetcher = None
 
 # declare flask app
-app = Flask(__name__, template_folder=template_path)
+app = Flask(
+    __name__,
+    static_folder=static_path,
+    template_folder=template_path
+    )
 
 # --- Routes ---
 
