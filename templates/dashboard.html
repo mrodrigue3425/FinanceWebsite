@@ -4,32 +4,15 @@
 
 {% block head %}
     {{ super() }}
-    <!-- Custom CSS to make the charts taller -->
-
-    <!-- Sets the browser tab title for the homepage -->
-    
-    <style>
-        /* Defines a fixed height for large chart containers */
-        .chart-lg-height {
-            height: 500px; /* Adjust this value (e.g., 600px) if you want them even taller */
-        }
-        /* Ensure the canvas fills its container */
-        .card-body canvas {
-            height: 100% ;
-            width: 100% ;
-        }
-    </style>
-
+    <!-- For the chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     
 {% endblock %}
 
 <!-- Fills the main content area (inside the <main> tag) -->
 {% block content %}
- 
-    <!-- 1. SUMMARY BAR WITH KEY METRICS AND DATE SELECTOR -->
     
-    <h1 class="mb-4 text-dark fw-bold">Market Overview</h1>
+    <h1 class="mb-4 text-dark fw-bold">Mexico FI Curve Monitor</h1>
 
     <!-- 1. SUMMARY BAR WITH KEY METRICS AND DATE SELECTOR -->
     <div class="row mb-5 align-items-center">
@@ -128,7 +111,7 @@
         <div class="col-lg-12">
             <div class="card shadow-lg h-100">
                 <div class="card-header bg-white">
-                    <h5 class="mb-0">Mexico Sovereign Yield Curve</h5>
+                    <h5 class="mb-0">Sovereign Yield Curve</h5>
                 </div>
                 <div class="card-body chart-lg-height">
                     <canvas id="yieldCurveChart"></canvas>

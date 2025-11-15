@@ -1,18 +1,8 @@
 .chart-lg-height {
-    height: 500px; /* Adjust this value (e.g., 600px) if you want them even taller */
+    height: 600px; 
 }
 
-.card-body canvas {
-    height: 100% ;
-    width: 100% ;
-}
-
-.card {
-    outline: 2px solid red;
-}
-div {
-    outline: 2px solid green;
-}
 main {
-    outline: 2px solid peru;
+    margin-top: 24px;
+    margin-bottom: 24px;
 }
