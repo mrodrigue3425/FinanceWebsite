@@ -126,7 +126,7 @@
     <script>
 
         window.onload = function() {
-            
+
             const dynamicLabels = JSON.parse('{{curve_labels | tojson | safe}}')
             const dynamicRates = JSON.parse('{{curve_yields | tojson | safe}}')
             const dynamicDTMs = JSON.parse('{{curve_dtms | tojson | safe}}');
@@ -190,7 +190,9 @@
                                         `Days to Maturity: ${dtmValue.toLocaleString()}`
                                     ];
                                 }
-                            }
+                            },
+                            titleFont: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
+                            bodyFont: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 }
                         },
                         legend: { display: false },
                         title: { display: false }
@@ -200,14 +202,18 @@
                             type: 'linear',
                             title: {
                                 display: true,
+                                font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
                                 text: 'Term to Maturity (Years)'
-                            }
+                            },
+                            ticks: { font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 } }
                         },
                         y: {
                             title: {
                                 display: true,
+                                font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
                                 text: 'Yield to Maturity (%)'
-                            }
+                            },
+                            ticks: { font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 } }
                         }
                     }
                 }
