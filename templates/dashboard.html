@@ -14,6 +14,7 @@
 <!-- 1. TITLE AND DATE SELECTOR -->
     
     <div class="row g-2 mb-2">
+
         <div class="col-lg-7 col-md-8 col-sm-12
                     text-center text-lg-start">
             <h1 class="mb-0 text-dark fw-bold">Mexico FI Curve Monitor</h1>
@@ -22,91 +23,82 @@
         <div class="col-lg-5 col-md-4 col-sm-12
                     d-flex justify-content-lg-end justify-content-center
                     align-items-center">
+            
             <label class="form-label fw-bold text-secondary mb-0 me-2 text-nowrap">
                 Curve Date
             </label>
-            <input type="date" id="date-selector" class="form-control">
+
+            <input type="date"
+                id="date-selector"
+                class="form-control">
         </div>
+
     </div>
     
 
     <!-- 1. SUMMARY BAR WITH KEY MACRO METRICS -->
     <div class="row mb-5 align-items-center">
 
-        <!-- Metric Cards Container (Now uses col-lg-9 to keep layout similar to previous version) -->
-        <div class="col-lg-9 col-md-8">
-            <div class="row g-3">
+        <!-- Metric Cards Container -->
+        <div class="col-lg-12">
+            <div class="row g-1">
                 
-                <!-- NEW: TIIE Fondeo Metric -->
-                <!-- Adjusted to col-lg-3 to fit 4 cards across a 12-column row -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <!-- TIIE Fondeo Metric -->
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-danger border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-title text-muted mb-2">TIIEF (1d)</h6>
                             <h7 class="card-subtitle fw-bold text-danger">{{summary_data.TIIEF.value}}%</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.TIIEF.date}}</h7>
                         </div>
                     </div>
                 </div>
                 
                 <!-- TIIE Metric -->
-                <!-- Adjusted to col-lg-3 to fit 4 cards across a 12-column row -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-primary border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-subtitle text-muted mb-2">TIIE (28d)</h6>
                             <h7 class="card-subtitle fw-bold text-primary">{{summary_data.TIIE28.value}}%</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.TIIE28.date}}</h7>
                         </div>
                     </div>
                 </div>
 
                 <!-- Target Rate Metric -->
-                <!-- Adjusted to col-lg-3 to fit 4 cards across a 12-column row -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-success border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-subtitle text-muted mb-2">Target Rate</h6>
                             <h7 class="card-subtitle fw-bold text-success">{{summary_data.TargetRate.value}}%</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.TargetRate.date}}</h7>
                         </div>
                     </div>
                 </div>
 
                 <!-- Inflation Metric -->
-                <!-- Adjusted to col-lg-3 to fit 4 cards across a 12-column row -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-warning border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-subtitle text-muted mb-2">Inflation</h6>
                             <h7 class="card-subtitle fw-bold text-warning">{{summary_data.Inflation.value}}%</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.Inflation.date}}</h7>
                         </div>
                     </div>
                 </div>
+
                 <!-- Inflation Metric -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-secondary border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-subtitle text-muted mb-2">UDI/MXN</h6>
                             <h7 class="card-subtitle fw-bold text-secondary">{{summary_data.UDI_MXN.value}}</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.UDI_MXN.date}}</h7>
                         </div>
                     </div>
                 </div>
+
                 <!-- Exchange rate -->
-                <div class="col-lg-2 col-md-6 col-sm-6">
+                <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-start border-dark border-5 h-100">
                         <div class="card-body">
                             <h6 class="card-subtitle text-muted mb-2">USD/MXN</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.USD_MXN.value}}</h7>
-                            <h7 class="card-title mb-2 text-muted">Published</h7>
-                            <h7 class="card-subtitle text-muted">{{summary_data.USD_MXN.date}}</h7>
                         </div>
                     </div>
                 </div>
@@ -115,10 +107,10 @@
         </div>
     </div>
 
-    <!-- 2. TWO-COLUMN CHART SECTION (Yield Curve & Time Series) -->
+    <!-- 2. CHART SECTION (Yield Curve) -->
     <div class="row g-4">
         
-        <!-- Left Column: Yield Curve Plot -->
+        <!-- Yield Curve Plot -->
         <div class="col-lg-12">
             <div class="card shadow-lg h-100">
                 <div class="card-header bg-white">
