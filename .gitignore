@@ -18,4 +18,5 @@ cpp_engine/tests/test_price_to_yield
 .vscode/settings.json
 .eggs
 math.md
-test.html
+templates/test.html
+**/.pytest_cache/
