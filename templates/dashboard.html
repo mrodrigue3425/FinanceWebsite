@@ -11,16 +11,27 @@
 
 <!-- Fills the main content area (inside the <main> tag) -->
 {% block content %}
+<!-- 1. TITLE AND DATE SELECTOR -->
     
-    <h1 class="mb-4 text-dark fw-bold">Mexico FI Curve Monitor</h1>
-
-    <!-- 1. SUMMARY BAR WITH KEY METRICS AND DATE SELECTOR -->
-    <div class="row mb-5 align-items-center">
-        <!-- Date Selector -->
-        <div class="col-lg-3 col-md-4 mb-3">
-            <label for="date-selector" class="form-label fw-bold text-secondary">Data As Of</label>
-            <input type="date" id="date-selector" class="form-control" value="2025-10-17" max="2025-10-17">
+    <div class="row g-2 mb-2">
+        <div class="col-lg-7 col-md-8 col-sm-12
+                    text-center text-lg-start">
+            <h1 class="mb-0 text-dark fw-bold">Mexico FI Curve Monitor</h1>
         </div>
+
+        <div class="col-lg-5 col-md-4 col-sm-12
+                    d-flex justify-content-lg-end justify-content-center
+                    align-items-center">
+            <label class="form-label fw-bold text-secondary mb-0 me-2 text-nowrap">
+                Curve Date
+            </label>
+            <input type="date" id="date-selector" class="form-control">
+        </div>
+    </div>
+    
+
+    <!-- 1. SUMMARY BAR WITH KEY MACRO METRICS -->
+    <div class="row mb-5 align-items-center">
 
         <!-- Metric Cards Container (Now uses col-lg-9 to keep layout similar to previous version) -->
         <div class="col-lg-9 col-md-8">
