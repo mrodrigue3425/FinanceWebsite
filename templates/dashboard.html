@@ -6,6 +6,15 @@
     {{ super() }}
     <!-- For the chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Flatpickr dark theme or Bootstrap-like theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
 {% endblock %}
 
@@ -23,16 +32,11 @@
         <div class="col-lg-5 col-md-4 col-sm-12
                     d-flex justify-content-lg-end justify-content-center
                     align-items-center">
-            
-            <label class="form-label fw-bold text-secondary mb-0 me-2 text-nowrap">
+            <label for="date-selector" class="form-label fw-bold text-secondary mb-0 me-2 text-nowrap">
                 Curve Date
             </label>
-
-            <input type="date"
-                id="date-selector"
-                class="form-control">
+            <input type="text" id="date-selector" class="form-control" placeholder="YYYY-MM-DD">
         </div>
-
     </div>
     
 
@@ -219,6 +223,19 @@
                 }
             });
         };
+    </script>
+    <script>
+        flatpickr("#date-selector", {
+            dateFormat: "d-m-Y",  // same as your native input
+            defaultDate: "2025-10-17",
+            maxDate: "2025-10-17",
+            allowInput: true,     // lets user type manually
+            onOpen: function(selectedDates, dateStr, instance) {
+                // optional: add Bootstrap font-family to the popup
+                instance.calendarContainer.style.fontFamily = 'Inter, system-ui, sans-serif';
+                instance.calendarContainer.style.fontSize = '1rem';
+            }
+        });
     </script>
 {% endblock %}
 
