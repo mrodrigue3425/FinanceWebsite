@@ -1,18 +1,39 @@
 # FinanceWebsite
 
-*A collection of financial analytics tools and dashboards built for flexibility, accuracy, and easy local deployment.*
+<p align="left">
+  <img src="https://github.com/mrodrigue3425/FinanceWebsite/actions/workflows/ci.yml/badge.svg" />
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg">
+  <img src="https://img.shields.io/badge/python-3.10%2B-green.svg">
+</p>
 
-This project is intended to evolve into a suite of financial utilities. Each module lives within the same unified web interface.
+
+## 📑 Table of Contents
+- [Overview](#-overview)
+- [Features](#-features)
+- [Project Structure](#-project-structure)
+- [Local Setup Instructions](#%EF%B8%8F-local-setup-instructions)
+- [Testing](#-testing)
+- [C++ Engine Performance](#-c-engine-performance)
+- [Contribution](#-contribution)
+- [License](#-license)
+- [Roadmap](#-roadmap)
+
+## 📝 Overview
+A modular web application providing financial analytics tools and dashboards.
+Each tool is designed to be accurate, fast, and easy to run locally.
+The project will expand over time into a full suite of quantitative finance utilities.
+Each module lives within the same unified web interface.
+
+---
+## ✨ Features
 
 Currently, the project includes its first major tool:
 
----
+### Fixed Income Dashboard — Mexico Sovereign Curve
 
-## 📈 Fixed Income Dashboard — Mexico Sovereign Curve
+The **Fixed Income Dashboard** provides an interactive visualisation of the Mexican sovereign yield curve and key macroeconomic indicators.
 
-The **Fixed Income Dashboard** provides an interactive visualization of the Mexican sovereign yield curve and key macroeconomic indicators.
-
-### Features
+#### Functionality
 - Fetches data from the Mexican Central Bank (Banxico) [API](https://www.banxico.org.mx/SieAPIRest/service/v1/):
   - Macro data:
     - TIIEF (1d)
@@ -37,6 +58,10 @@ The **Fixed Income Dashboard** provides an interactive visualization of the Mexi
 ---
 
 ## 🧩 Project Structure
+
+**Tech Stack:**  
+Python (Flask) • C++17 (pybind11) • Bootstrap • Chart.js • Jinja2 • PyTest • GoogleTest
+
 ```
 FinanceWebsite/
 ├── cpp_engine                           # C++ engine
@@ -74,6 +99,12 @@ FinanceWebsite/
 ```
 ---
 ## ⚙️ Local Setup Instructions
+
+**Requirements**
+- Python 3.10+
+- g++ with C++17 support
+- Linux or WSL recommended
+
 
 ### Quick Setup
 ```bash
@@ -134,11 +165,44 @@ To run a more in-depth C++ engine test suite with performance metrics, run
 g++ -std=c++17 cpp_engine/tests/test_price_to_yield.cpp cpp_engine/price_to_yield.cpp -o cpp_engine/tests/test_price_to_yield -lgtest -lgtest_main -pthread && ./cpp_engine/tests/test_price_to_yield
 ```
 ---
+## ⚡ C++ Engine Performance
+
+### Newton-Raphson Price-to-Yield Solver
+10,000 random inputs yielded 6dp precision in under 0.3ms on average with 0% round trip error, i.e., acquired yield plugged back into pricing equation matched input price to the required 6dp 100% of the time. 
+
+```
+[----------] 1 test from price_to_yieldTest
+[ RUN      ] price_to_yieldTest.BasicCase
+
+SUMMARY | Tests: 2000 (10000 bonds)
+==========================================
+ | Avg diff: 0 | Max diff: 0
+ | Avg time: 0.265199 ms
+==========================================
+ Fail count: 0 | Failure rate: 0%
+
+[       OK ] price_to_yieldTest.BasicCase (2658 ms)
+```
+---
+## 🌱 Contribution
+I strongly encourage anybody who wants to contribute to do so! To contribute, please do the following:
+- Fork this repo
+- Make a feature branch
+- Code away making clear commits and adding unit tests as you go
+- Format (black for Python and clang-format for C++)
+- Lint (flake8 and clang-tidy for C++)
+- Make sure ALL tests pass
+- Open a pull request
+
+Thanks in advance!
+
+---
 ## 📝 License
 
 This project is licensed under the Apache License 2.0. Click [here](./LICENSE) for more details.
 
 You are free to use, modify, and distribute this software under the terms of the license.
+
 ---
 
 ## 📌 Roadmap
