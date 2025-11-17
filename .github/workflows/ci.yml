@@ -5,56 +5,41 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
-    env:
-      BANXICO_API_KEY: ${{ secrets.BANXICO_API_KEY }}
 
     steps:
-      # --------------------------------------------------------
-      # Checkout repo
-      # --------------------------------------------------------
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # --------------------------------------------------------
-      # Install Python
-      # --------------------------------------------------------
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
 
-      # --------------------------------------------------------
-      # Cache pip packages (for faster CI)
-      # --------------------------------------------------------
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
 
-      # --------------------------------------------------------
-      # Install Python dependencies
-      # --------------------------------------------------------
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+    - name: Build and run C++ engine tests
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ libgtest-dev cmake
 
-      # --------------------------------------------------------
-      # Build the C++ Engine (pybind11 extension)
-      # --------------------------------------------------------
-      - name: Build C++ engine
-        run: |
-          python setup.py build_ext --inplace
+        sudo cmake -S /usr/src/gtest -B /usr/src/gtest/build
+        sudo cmake --build /usr/src/gtest/build --target gtest gtest_main
 
-      # --------------------------------------------------------
-      # Run Python tests (includes subprocess C++ tests)
-      # --------------------------------------------------------
-      - name: Run tests
-        run: |
-          pytest -q
+        g++ -std=c++17 \
+            cpp_engine/tests/test_price_to_yield.cpp \
+            cpp_engine/price_to_yield.cpp \
+            -o cpp_engine/tests/test_price_to_yield \
+            -lgtest -lgtest_main -pthread
+
+        ./cpp_engine/tests/test_price_to_yield
+
+    - name: Run Python tests
+      env:
+        BANXICO_API_KEY: ${{ secrets.BANXICO_API_KEY }}
+      run: |
+        pytest -q
