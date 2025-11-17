@@ -15,6 +15,19 @@
 
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Parse data from back end-->
+    <script>
+        window.curveData = {
+            labels: JSON.parse('{{ curve_labels | tojson | safe }}'),
+            yields: JSON.parse('{{ curve_yields | tojson | safe }}'),
+            dtms: JSON.parse('{{ curve_dtms | tojson | safe }}'),
+            prices: JSON.parse('{{ curve_pxs | tojson | safe }}')
+        };
+    </script>
+
+    <!-- Call dashboard javascript-->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     
 {% endblock %}
 
@@ -126,117 +139,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-
-        window.onload = function() {
-
-            const dynamicLabels = JSON.parse('{{curve_labels | tojson | safe}}')
-            const dynamicRates = JSON.parse('{{curve_yields | tojson | safe}}')
-            const dynamicDTMs = JSON.parse('{{curve_dtms | tojson | safe}}');
-            const dynamicPrices = JSON.parse('{{curve_pxs | tojson | safe}}');
-
-            const yieldCurveData = {
-                labels: dynamicLabels,
-                rates: dynamicRates,
-                dtms: dynamicDTMs,
-            };
-
-            const points = dynamicDTMs.map((dtm, i) => ({
-                x: dtm/365.25,
-                y: dynamicRates[i]
-                }));
-
-            const yieldCurve = document.getElementById('yieldCurveChart').getContext('2d');
-            new Chart(yieldCurve, {
-                type: 'line',
-                data: {
-                    labels: yieldCurveData.labels,
-                    datasets: [
-                        {
-                            label: 'Yield (%)',
-                            data: points,
-                            borderColor: '#0d6efd', 
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                            showLine: false,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: { display: true, text: 'Yield (%)' },
-                            beginAtZero: false
-                        },
-                        x: {
-                            title: { display: true, text: 'Maturity' }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            displayColors: false,
-                            callbacks: {
-                                title: function (context) {
-                                    const index = context[0].dataIndex;
-                                    return dynamicLabels[index];
-                                },
-                                label: function (context) {
-                                    const yieldValue = context.parsed.y;
-                                    const dtmValue = dynamicDTMs[context.dataIndex];
-                                    const pxValue = dynamicPrices[context.dataIndex];
-                                    return [
-                                        `Yield (%): ${yieldValue.toFixed(8)}`,
-                                        `Clean Price (MXN):  ${pxValue.toFixed(6)}`,
-                                        `Days to Maturity: ${dtmValue.toLocaleString()}`
-                                    ];
-                                }
-                            },
-                            titleFont: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
-                            bodyFont: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 }
-                        },
-                        legend: { display: false },
-                        title: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            type: 'linear',
-                            title: {
-                                display: true,
-                                font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
-                                text: 'Term to Maturity (Years)'
-                            },
-                            ticks: { font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 } }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 15 },
-                                text: 'Yield to Maturity (%)'
-                            },
-                            ticks: { font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif', size: 13 } }
-                        }
-                    }
-                }
-            });
-        };
-    </script>
-    <script>
-        flatpickr("#date-selector", {
-            dateFormat: "d-m-Y",  // same as your native input
-            defaultDate: "2025-10-17",
-            maxDate: "2025-10-17",
-            allowInput: true,     // lets user type manually
-            onOpen: function(selectedDates, dateStr, instance) {
-                // optional: add Bootstrap font-family to the popup
-                instance.calendarContainer.style.fontFamily = 'Inter, system-ui, sans-serif';
-                instance.calendarContainer.style.fontSize = '1rem';
-            }
-        });
-    </script>
 {% endblock %}
 
 
