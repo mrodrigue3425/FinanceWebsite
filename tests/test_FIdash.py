@@ -452,6 +452,48 @@ def test_cpp_price_to_yield():
     print(result.stdout)  # so pytest shows GTest output
     assert result.returncode == 0, "GTest failed!"
 
+def test_parse_summary_data():
+
+    month_to_string= {
+        "01": "January",
+        "02": "February",
+        "03": "March",
+        "04": "April",
+        "05": "May",
+        "06": "June",
+        "07": "July",
+        "08": "August",
+        "09": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December",
+    }
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    banxico_data_many = generate_random_API_responses(100)
+
+    for banxico_data in banxico_data_many:
+
+        parsed_summary_data = test_object.parse_summary_data(banxico_data["summary"])
+
+        # Ensure keys of output are correct
+        assert all([list(parsed_summary_data.keys())[x[0]] in test_object.SUMMARY_MAP.values() for x in enumerate(parsed_summary_data.keys()) ])
+
+        # These dates should be the same
+        dates = [parsed_summary_data.get(x).get("date") for x in ["TIIEF", "TIIE28", "UDI_MXN", "TargetRate", "USD_MXN"]]
+        assert len(set(dates)) == 1
+
+        # This should be different
+        assert parsed_summary_data.get("Inflation") not in dates
+
+        # Make sure Inflation dt is correct
+        yr = int(parsed_summary_data.get("TIIEF").get("date")[-4:])
+        yrm1 = yr - 1
+        mnth = month_to_string.get(parsed_summary_data.get("TIIEF").get("date").split("/")[1])
+        assert parsed_summary_data.get("Inflation").get("date") == mnth + " " + str(yrm1) + " - " + mnth + " " + str(yr)
+
+
 
 def test_get_labels_dates_yields():
     test_object = FIdash.BanxicoDataFetcher()
@@ -662,8 +704,8 @@ def generate_random_API_responses(n):
         rand_order_summary = random.sample(range(6), 6)
 
         # establish other random data
-        rand_date = f"{random.randrange(1,29)}/{random.randrange(1,13)}\
-/{random.randrange(2000,2026)}"
+        rand_date = f"{str(random.randrange(1,29)).zfill(2)}/{str(random.randrange(1,13)).zfill(2)}\
+/{str(random.randrange(2000,2026))}"
 
         # generate random mbonos and cetes data
         for i in range(5):
