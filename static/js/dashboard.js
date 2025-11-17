@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", () => {
-    
+
     // === 1. DATE PICKER ===
     flatpickr("#date-selector", {
         dateFormat: "d-m-Y",
@@ -12,8 +12,14 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // === 2. SUMMARY TOOLTIP INITIALIZATION ===
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 
-    // === 2. CHART ===
+
+    // === 3. CHART ===
     const { labels, yields, dtms, prices } = window.curveData;
 
     const points = dtms.map((dtm, i) => ({

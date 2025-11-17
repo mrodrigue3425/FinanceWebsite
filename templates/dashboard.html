@@ -62,7 +62,10 @@
                 
                 <!-- TIIE Fondeo Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.TIIEF.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-title text-muted mb-2">TIIEF (1d)</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.TIIEF.value}}%</h7>
@@ -70,9 +73,12 @@
                     </div>
                 </div>
                 
-                <!-- TIIE Metric -->
+                <!-- TIIE28 Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top" 
+                                title="Effective Date: {{ summary_data.TIIE28.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">TIIE (28d)</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.TIIE28.value}}%</h7>
@@ -82,7 +88,10 @@
 
                 <!-- Target Rate Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.TargetRate.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">Target Rate</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.TargetRate.value}}%</h7>
@@ -92,7 +101,10 @@
 
                 <!-- Inflation Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.Inflation.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">Inflation</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.Inflation.value}}%</h7>
@@ -100,9 +112,12 @@
                     </div>
                 </div>
 
-                <!-- Inflation Metric -->
+                <!-- UDI value -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.UDI_MXN.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">UDI/MXN</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.UDI_MXN.value}}</h7>
@@ -110,9 +125,12 @@
                     </div>
                 </div>
 
-                <!-- Exchange rate -->
+                <!-- USD Exchange rate -->
                 <div class="col-lg-2 col-sm-4 col-6">
-                    <div class="card shadow-sm border-primary border-4 h-100">
+                    <div class="card shadow-sm border-primary border-4 h-100"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.USD_MXN.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">USD/MXN</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.USD_MXN.value}}</h7>
