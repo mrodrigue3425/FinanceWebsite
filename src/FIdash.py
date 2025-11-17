@@ -430,6 +430,21 @@ class BanxicoDataFetcher:
 
     def parse_summary_data(self, summary_response_data):
 
+        month_to_string = {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December"
+        }
+
         logger.debug("Parsing summary data.")
 
         parsed_summary = {}
@@ -438,7 +453,14 @@ class BanxicoDataFetcher:
             series_id = series["idSerie"]
             metric = self.SUMMARY_MAP.get(series_id, "Unknown")
             value = round(float(series["datos"][0]["dato"]), 6)
-            dt = series["datos"][0]["fecha"]
+
+            if series_id == "SP30578":
+                month = month_to_string.get(int(series["datos"][0]["fecha"].split("/")[1]))
+                year = int(series["datos"][0]["fecha"].split("/")[2])
+                dt = f"{month} {year-1} - {month} {year}".strip()
+            else:
+                dt = series["datos"][0]["fecha"]
+
             parsed_summary[metric] = {"value": value, "date": dt}
 
         return parsed_summary
