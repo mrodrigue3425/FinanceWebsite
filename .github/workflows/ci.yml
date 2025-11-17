@@ -22,6 +22,10 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Build C++ Python extension
+      run: |
+        python setup.py build_ext --inplace
+
     - name: Build and run C++ engine tests
       run: |
         sudo apt-get update
