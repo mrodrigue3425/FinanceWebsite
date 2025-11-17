@@ -1,10 +1,12 @@
 # FinanceWebsite
 
-<p align="left">
-  <img src="https://github.com/mrodrigue3425/FinanceWebsite/actions/workflows/ci.yml/badge.svg" />
-  <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg">
-  <img src="https://img.shields.io/badge/python-3.10%2B-green.svg">
-</p>
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache&logoColor=white)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](#)
+[![C++17](https://img.shields.io/badge/C++-17-00599C?logo=c%2B%2B&logoColor=white)](#)
+[![CI Badge](https://github.com/mrodrigue3425/FinanceWebsite/actions/workflows/ci.yml/badge.svg)](https://github.com/mrodrigue3425/FinanceWebsite/actions)
+
+
+
 
 
 ## 📑 Table of Contents
