@@ -86,7 +86,7 @@ class BanxicoDataFetcher:
 
         logger.debug("Initialising BanxicoDataFetcher.")
 
-        self.api_key = os.getenv("BANXICO_API_KEY")
+        self.api_key = os.getenv("BANXICO_API_KEY").strip()
 
         # check if Banxico API key in environment variables
         if not self.api_key:
