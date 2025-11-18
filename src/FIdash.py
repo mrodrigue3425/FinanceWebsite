@@ -195,22 +195,35 @@ class BanxicoDataFetcher:
             reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups
         )
 
-        # --- parse summary data ---
+        # --- generate bond identifiers ---
 
-        parsed_summary_data = self.parse_summary_data(banxico_summ_inf_data)
+        cetes_ids, bonos_ids = self.generate_ids(reordered_cetes_dtms,reordered_bonos_dtms)
 
         # --- final yield curve data ---
 
         yield_curve_data = {
-            "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
-            "mbonos": {"ylds": reordered_bonos_ylds, "pxs": reordered_bonos_pxs,  "dtms": reordered_bonos_dtms},
+            "cetes": {
+                "ylds": reordered_cetes_ylds,
+                "dtms": reordered_cetes_dtms,
+                "ids": cetes_ids
+            },
+            "mbonos": {
+                "ylds": reordered_bonos_ylds,
+                "pxs": reordered_bonos_pxs,
+                "dtms": reordered_bonos_dtms,
+                "ids": bonos_ids
+            },
         }
 
-        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids = (
             self.get_labels_dates_yields(yield_curve_data)
         )
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, parsed_summary_data
+        # --- parse summary data ---
+
+        parsed_summary_data = self.parse_summary_data(banxico_summ_inf_data)
+
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids, parsed_summary_data
 
     def call_api_curve_data(self):
 
@@ -571,6 +584,24 @@ class BanxicoDataFetcher:
 
         return yields
 
+    def generate_ids(self, cetes_dtms, bonos_dtms):
+        cetes_ids = []
+        bonos_ids = []
+
+        for cete in cetes_dtms:
+            dtm = cete.get("datos")[0].get("dato")
+            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(days=dtm)
+            id = "BI" + str(mat.year)[2:] + str(mat.month).zfill(2) + str(mat.day).zfill(2)
+            cetes_ids.append(id)
+
+        for mbono in bonos_dtms:
+            dtm = mbono.get("datos")[0].get("dato")
+            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(days=dtm)
+            id = "M" + str(mat.year)[2:] + str(mat.month).zfill(2) + str(mat.day).zfill(2)
+            bonos_ids.append(id)  
+
+        return cetes_ids, bonos_ids
+
     def get_labels_dates_yields(self, curve_dict):
 
         def yield_to_price(yld,d):
@@ -585,6 +616,7 @@ class BanxicoDataFetcher:
         curve_yields = []
         curve_dtms = []
         curve_pxs = []
+        curve_ids= []
 
         # cetes
         for i, tenor in enumerate(curve_dict.get("cetes").get("ylds")):
@@ -595,6 +627,7 @@ class BanxicoDataFetcher:
                 curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")
             )
             curve_pxs.append(yield_to_price(tenor.get("datos")[0].get("dato"),curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")))
+            curve_ids.append(curve_dict.get("cetes").get("ids")[i])
 
         # mbonos
         for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
@@ -605,8 +638,9 @@ class BanxicoDataFetcher:
                 curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato")
             )
             curve_pxs.append(curve_dict.get("mbonos").get("pxs")[i].get("datos")[0].get("dato"))
+            curve_ids.append(curve_dict.get("mbonos").get("ids")[i])
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids
 
     def __repr__(self):
         return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, \
