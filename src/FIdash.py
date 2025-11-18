@@ -20,6 +20,10 @@ class BanxicoDataFetcher:
     Fetches data from Banxico SIE API.
 
     See https://www.banxico.org.mx/SieAPIRest/service/v1/
+
+    IMPORTANT: series ids for curve data must be declared inside
+    dictionaries below in order of increasing tenor (term to mautity).
+
     """
 
     # --- cetes data Banxico API series ids ---
