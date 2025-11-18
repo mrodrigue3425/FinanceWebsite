@@ -125,6 +125,7 @@ def fi_dashboard():
         curve_dtms=curve_dtms,
         curve_pxs = curve_pxs,
         summary_data=summary_data,
+        anchor_date=banxico_data_fetcher.anchor_date
     )
 
 
