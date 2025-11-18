@@ -25,7 +25,8 @@
             labels: JSON.parse('{{ curve_labels | tojson | safe }}'),
             yields: JSON.parse('{{ curve_yields | tojson | safe }}'),
             dtms: JSON.parse('{{ curve_dtms | tojson | safe }}'),
-            prices: JSON.parse('{{ curve_pxs | tojson | safe }}')
+            prices: JSON.parse('{{ curve_pxs | tojson | safe }}'),
+            ids: JSON.parse('{{ curve_ids | tojson | safe }}')
         };
         // the data the summary bar wakes up to
         window.summaryData = JSON.parse('{{ summary_data | tojson | safe }}');

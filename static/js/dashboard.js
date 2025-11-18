@@ -20,7 +20,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
     // === 3. CHART ===
-    const { labels, yields, dtms, prices } = window.curveData;
+    const { labels, yields, dtms, prices, ids } = window.curveData;
 
     const points = dtms.map((dtm, i) => ({
         x: dtm / 365.25,
@@ -59,7 +59,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     callbacks: {
                         title(context) {
                             const i = context[0].dataIndex;
-                            return labels[i];
+                            return `${labels[i]}\n${ids[i]}`;
                         },
                         label(context) {
                             const i = context.dataIndex;
