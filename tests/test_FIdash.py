@@ -1,5 +1,6 @@
 import numpy as np
 from datetime import datetime
+from dateutil.relativedelta import *
 from src import FIdash
 import random
 import subprocess
@@ -19,88 +20,144 @@ def test_banxico_data_initialization():
     ids.update(test_object.MBONOS_MATURITY_MAP_DTM)
     ids.update(test_object.MBONOS_MATURITY_MAP_COUP)
     ids.update(test_object.SUMMARY_MAP)
+    ids.update(test_object.INFLATION_MAP)
 
     assert len(ids) == len(set(ids.keys()))
 
 
-def test_call_api():
+def test_banxico_api_calls():
     test_object = FIdash.BanxicoDataFetcher()
-    test_data = test_object.call_api()
+    
+    # === test curve data API caller ===
 
-    # test returned series ids are the same as defined in BanxicoDataFetcher
+    test_data = test_object.call_api_curve_data()
+
+    # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
+
+    # cetes yields
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_YLD.keys()
             for y in [x["idSerie"] for x in test_data["cetes_yld"]]
         ]
     )
+    # cetes days to maturity
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_DTM.keys()
             for y in [x["idSerie"] for x in test_data["cetes_dtm"]]
         ]
     )
+    # mbonos clean prices
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_PX.keys()
             for y in [x["idSerie"] for x in test_data["mbonos_px"]]
         ]
     )
+    # mbonos days to maturity
+    assert all(
+        [
+            y in test_object.MBONOS_MATURITY_MAP_DTM.keys()
+            for y in [x["idSerie"] for x in test_data["mbonos_dtm"]]
+        ]
+    )
+    # mbonos coupons
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_COUP.keys()
             for y in [x["idSerie"] for x in test_data["mbonos_coup"]]
         ]
     )
-    assert all(
-        [
-            y in test_object.SUMMARY_MAP.keys()
-            for y in [x["idSerie"] for x in test_data["summary"]]
-        ]
-    )
 
-    # test all returned data is numeric
+    # --- test all returned  data is numeric --- 
+
+    # cetes yields
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
             for x in test_data["cetes_yld"]
         ]
     )
+    # cetes days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
             for x in test_data["cetes_dtm"]
         ]
     )
+    #mbonos clean prices
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
             for x in test_data["mbonos_px"]
         ]
     )
+    #mbonos days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
             for x in test_data["mbonos_dtm"]
         ]
     )
+    # mbonos coupons
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
             for x in test_data["mbonos_coup"]
         ]
     )
+
+    # === test summary/inflation data API caller ===
+
+    test_data = test_object.call_api_summ_inf_data()
+
+    # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
+
+    # summary data
     assert all(
-        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["summary"]]
+        [
+            y in test_object.SUMMARY_MAP.keys()
+            for y in [x["idSerie"] for x in test_data["summary"]]
+        ]
+    )
+    # inflation data
+    assert all(
+        [
+            y in test_object.INFLATION_MAP.keys()
+            for y in [x["idSerie"] for x in test_data["inflation"]]
+        ]
     )
 
+    # --- test all returned data is numeric --- 
+
+    # summary
+    assert all(
+        [
+            isinstance(float(x["datos"][0]["dato"]), float)
+            for x in test_data["summary"]
+        ]
+    )
+    # inflation
+    assert all(
+        [
+            isinstance(float(x["datos"][-1]["dato"]), float)
+            for x in test_data["inflation"]
+        ]
+    )
+
+    # --- test only one inflation point is returned
+    assert len(test_data["inflation"][0]["datos"]) == 1
 
 def test_clean_returned_data():
 
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -134,7 +191,10 @@ def test_reorder_data():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -334,7 +394,10 @@ def test_prc_to_yld():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -392,7 +455,10 @@ def test_prc_to_yld_min_precision():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(1000)
+    banxico_data_many, summ_data = generate_random_API_responses(1000)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -471,27 +537,39 @@ def test_parse_summary_data():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    curve_data, summary_data_many = generate_random_API_responses(100)
 
-    for banxico_data in banxico_data_many:
+    # curve data not required for this test
+    del curve_data
 
-        parsed_summary_data = test_object.parse_summary_data(banxico_data["summary"])
+    all_vals = list(test_object.SUMMARY_MAP.values())+list(test_object.INFLATION_MAP.values())
+
+    for summary_data in summary_data_many:
+
+        parsed_summary_data = test_object.parse_summary_data(summary_data)
 
         # Ensure keys of output are correct
-        assert all([list(parsed_summary_data.keys())[x[0]] in test_object.SUMMARY_MAP.values() for x in enumerate(parsed_summary_data.keys()) ])
+        assert all([list(parsed_summary_data.keys())[x] in all_vals for x in range(len(parsed_summary_data)) ])
 
         # These dates should be the same
         dates = [parsed_summary_data.get(x).get("date") for x in ["TIIEF", "TIIE28", "UDI_MXN", "TargetRate", "USD_MXN"]]
         assert len(set(dates)) == 1
 
         # This should be different
-        assert parsed_summary_data.get("Inflation") not in dates
+        assert parsed_summary_data.get("MonthlyCPIYoY") not in dates
 
         # Make sure Inflation dt is correct
-        yr = int(parsed_summary_data.get("TIIEF").get("date")[-4:])
-        yrm1 = yr - 1
         mnth = month_to_string.get(parsed_summary_data.get("TIIEF").get("date").split("/")[1])
-        assert parsed_summary_data.get("Inflation").get("date") == mnth + " " + str(yrm1) + " - " + mnth + " " + str(yr)
+        yr = int(parsed_summary_data.get("TIIEF").get("date")[-4:])
+        if mnth == "January":
+            mnth_minus = "December"
+            yr = yr - 1
+            yrm1 = yr - 1
+        else:
+            mnth_minus =  month_to_string.get(str((int(parsed_summary_data.get("TIIEF").get("date").split("/")[1]) - 1)).zfill(2)) 
+            yrm1 = yr - 1
+        
+        assert parsed_summary_data.get("MonthlyCPIYoY").get("date") == mnth_minus + " " + str(yrm1) + " - " + mnth_minus + " " + str(yr)
 
 
 
@@ -499,7 +577,10 @@ def test_get_labels_dates_yields():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
         # cetes
@@ -678,7 +759,13 @@ def generate_random_API_responses(n):
 
     test_object = FIdash.BanxicoDataFetcher()
 
-    response_list = []
+    num_cetes = len(test_object.CETES_MATURITY_MAP_DTM)
+    num_mbonos = len(test_object.MBONOS_MATURITY_MAP_DTM)
+    num_summary = len(test_object.SUMMARY_MAP)
+    num_inflation = len(test_object.INFLATION_MAP)
+
+    curve_response_list = []
+    summary_response_list = []
 
     possible_coupons = np.arange(0.25, 15.25, 0.25)
 
@@ -692,23 +779,33 @@ def generate_random_API_responses(n):
         coups = []
 
         summary = []
+        inflation = []
 
-        # establish random response orders
-        rand_order_cetes_yld = random.sample(range(5), 5)
-        rand_order_cetes_dtm = random.sample(range(5), 5)
+        # --- establish random curve response orders ---
 
-        rand_order_mbonos_px = random.sample(range(5), 5)
-        rand_order_mbonos_dtm = random.sample(range(5), 5)
-        rand_order_mbonos_coup = random.sample(range(5), 5)
+        # cetes
+        rand_order_cetes_yld = random.sample(range(num_cetes), num_cetes)
+        rand_order_cetes_dtm = random.sample(range(num_cetes), num_cetes)
 
-        rand_order_summary = random.sample(range(6), 6)
+        # mbonos
+        rand_order_mbonos_px = random.sample(range(num_mbonos), num_mbonos)
+        rand_order_mbonos_dtm = random.sample(range(num_mbonos), num_mbonos)
+        rand_order_mbonos_coup = random.sample(range(num_mbonos), num_mbonos)
+      
+        # --- establish random summary data response orders ---
+
+        # summary
+        rand_order_summary = random.sample(range(num_summary), num_summary)
+
+        # inflation
+        rand_order_inflation = random.sample(range(num_inflation), num_inflation)
 
         # establish other random data
         rand_date = f"{str(random.randrange(1,29)).zfill(2)}/{str(random.randrange(1,13)).zfill(2)}\
 /{str(random.randrange(2000,2026))}"
 
         # generate random mbonos and cetes data
-        for i in range(5):
+        for i in range(num_cetes):
             ylds.append(
                 {
                     "idSerie": list(test_object.CETES_MATURITY_MAP_YLD.keys())[
@@ -791,7 +888,7 @@ def generate_random_API_responses(n):
             )
 
         # generate random summary data
-        for i in range(6):
+        for i in range(num_summary):
             summary.append(
                 {
                     "idSerie": list(test_object.SUMMARY_MAP.keys())[
@@ -808,9 +905,30 @@ def generate_random_API_responses(n):
                     ],
                 }
             )
+        # generate random inflation data
+        sim_inf_date = datetime.strptime(rand_date, "%d/%m/%Y") + relativedelta(months=-1)
+        sim_inf_date = sim_inf_date + relativedelta(day=1)
+        parsed_inf_date = sim_inf_date.strftime("%d/%m/%Y")
+        for i in range(num_inflation):
+            inflation.append(
+                {
+                    "idSerie": list(test_object.INFLATION_MAP.keys())[
+                        rand_order_inflation[i]
+                    ],
+                    "titulo": list(test_object.INFLATION_MAP.values())[
+                        rand_order_inflation[i]
+                    ],
+                    "datos": [
+                        {
+                            "fecha": parsed_inf_date,
+                            "dato": str(round(random.uniform(0, 10), 2)),
+                        }
+                    ],
+                }
+            )
 
         # simulate response structure
-        response = {
+        curve_response = {
             "cetes_yld": ylds,
             "cetes_dtm": dtms_cetes,
             "mbonos_px": pxs,
@@ -819,9 +937,15 @@ def generate_random_API_responses(n):
             "summary": summary,
         }
 
-        response_list.append(response)
+        summary_response = {
+            "summary": summary,
+            "inflation": inflation,
+        }
 
-    return response_list
+        curve_response_list.append(curve_response)
+        summary_response_list.append(summary_response)
+
+    return curve_response_list, summary_response_list
 
 
 def yld_to_px(TC, r, K, d):

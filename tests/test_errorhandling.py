@@ -24,7 +24,7 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             "TargetRate": {"value": 7.5, "date": "29/10/2025"},
             "USD_MXN": {"value": 18.4315, "date": "28/10/2025"},
             "UDI_MXN": {"value": 8.586547, "date": "10/11/2025"},
-            "Inflation": {"value": 3.76, "date": "01/09/2025"},
+            "MonthlyCPIYoY": {"value": 3.76, "date": "01/09/2025"},
         }
         curve_labels = [
             "28 Days",
@@ -77,6 +77,8 @@ class MockSuccessFetcher(BanxicoDataFetcher):
         ]
 
         curve_dtms = [28, 91, 182, 364, 720, 1100, 1825, 3650, 7300, 10950]
+
+        self.anchor_date = "25/10/2025"
 
         return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, mock_summary
 
