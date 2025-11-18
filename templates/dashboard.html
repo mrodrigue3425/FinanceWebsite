@@ -18,12 +18,17 @@
 
     <!-- Parse data from back end-->
     <script>
+        // the date the date picker wakes up to
+        window.anchorDate = JSON.parse('{{ anchor_date | tojson | safe }}')
+       // the curve data the yield curve chart wakes up to
         window.curveData = {
             labels: JSON.parse('{{ curve_labels | tojson | safe }}'),
             yields: JSON.parse('{{ curve_yields | tojson | safe }}'),
             dtms: JSON.parse('{{ curve_dtms | tojson | safe }}'),
             prices: JSON.parse('{{ curve_pxs | tojson | safe }}')
         };
+        // the data the summary bar wakes up to
+        window.summaryData = JSON.parse('{{ summary_data | tojson | safe }}');
     </script>
 
     <!-- Call dashboard javascript-->
@@ -104,10 +109,10 @@
                     <div class="card shadow-sm border-primary border-4 h-100"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
-                         title="{{ summary_data.Inflation.date }}">
+                         title="{{ summary_data.MonthlyCPIYoY.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">CPI YoY</h6>
-                            <h7 class="card-subtitle fw-bold text-dark">{{summary_data.Inflation.value}}%</h7>
+                            <h7 class="card-subtitle fw-bold text-dark">{{summary_data.MonthlyCPIYoY.value}}%</h7>
                         </div>
                     </div>
                 </div>

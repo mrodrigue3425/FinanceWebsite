@@ -2,9 +2,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // === 1. DATE PICKER ===
     flatpickr("#date-selector", {
-        dateFormat: "d-m-Y",
-        defaultDate: "2025-10-17",
-        maxDate: "2025-10-17",
+        dateFormat: "d/m/Y",
+        defaultDate: window.anchorDate,
+        maxDate: window.anchorDate,
         allowInput: true,
         onOpen(selectedDates, dateStr, instance) {
             instance.calendarContainer.style.fontFamily = 'Inter, system-ui, sans-serif';
