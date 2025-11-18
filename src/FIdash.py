@@ -4,6 +4,8 @@ import requests
 import logging
 import cpp_engine
 import copy
+from datetime import datetime
+from dateutil.relativedelta import *
 
 
 # load environment variables from .env file
@@ -75,9 +77,14 @@ class BanxicoDataFetcher:
         "SF331451": "TIIEF",
         "SF43783": "TIIE28",
         "SF61745": "TargetRate",
-        "SP30578": "Inflation",
         "SP68257": "UDI_MXN",
         "SF343410": "USD_MXN",
+    }
+
+    # --- inflation data Banxico API series ids ---
+
+    INFLATION_MAP = {
+        "SP30578": "MonthlyCPIYoY",
     }
 
     api_url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/"
@@ -111,9 +118,6 @@ class BanxicoDataFetcher:
         self.mbonos_dtm_ids = ",".join(self.MBONOS_MATURITY_MAP_DTM.keys())
         self.mbonos_coup_ids = ",".join(self.MBONOS_MATURITY_MAP_COUP.keys())
 
-        # summary data
-        self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
-
         # --- define class variable API query URLs ---
 
         # cetes
@@ -136,34 +140,38 @@ class BanxicoDataFetcher:
         )
 
         # summary data
-        self.api_url_summary = (
-            self.api_url + f"{self.summary_ids}/datos/oportuno?decimales=sinCeros"
-        )
+        self.summary_ids = ",".join(self.SUMMARY_MAP.keys())
+
+        # inflation data
+        self.inflation_ids = ",".join(self.INFLATION_MAP.keys())
 
     def get_data(self):
 
         logger.debug("BanxicoDataFetcher: fetching data.")
 
-        # call the Banxico API
-        banxico_data = self.call_api()
+        # acquire curve data from the Banxico API
+        banxico_curve_data = self.call_api_curve_data()
 
-        # --- clean returned data ---
+        # acquire summary and inflation data from the Banxico API
+        banxico_summ_inf_data = self.call_api_summ_inf_data()
+
+        # --- clean returned curve data ---
 
         # cetes
         cleaned_cetes_ylds, cleaned_cetes_dtms = self.clean_returned_data(
-            banxico_data["cetes_yld"], banxico_data["cetes_dtm"]
+            banxico_curve_data["cetes_yld"], banxico_curve_data["cetes_dtm"]
         )
 
         # mbonos
         cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
             self.clean_returned_data(
-                banxico_data["mbonos_px"],
-                banxico_data["mbonos_dtm"],
-                banxico_data["mbonos_coup"],
+                banxico_curve_data["mbonos_px"],
+                banxico_curve_data["mbonos_dtm"],
+                banxico_curve_data["mbonos_coup"],
             )
         )
 
-        # --- reorder returned data ---
+        # --- reorder returned curve data ---
 
         # cetes
         reordered_cetes_ylds, reordered_cetes_dtms = self.reorder_data(
@@ -185,7 +193,7 @@ class BanxicoDataFetcher:
 
         # --- parse summary data ---
 
-        parsed_summary_data = self.parse_summary_data(banxico_data["summary"])
+        parsed_summary_data = self.parse_summary_data(banxico_summ_inf_data)
 
         # --- final yield curve data ---
 
@@ -200,11 +208,11 @@ class BanxicoDataFetcher:
 
         return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, parsed_summary_data
 
-    def call_api(self):
+    def call_api_curve_data(self):
 
-        # --- make the API requests ---
+        # === make the API requests for curve data ===
 
-        # cetes
+        # -- cetes --
         logger.debug("Fetching cetes yield data.")
         cetes_response_yld = self.session.get(
             self.api_url_cetes_yld, headers=self.session.headers, timeout=10
@@ -225,7 +233,7 @@ class BanxicoDataFetcher:
             )
         cetes_response_dtm.raise_for_status()
 
-        # mbonos
+        # -- mbonos --
         logger.debug("Fetching mbonos price data.")
         mbonos_response_px = self.session.get(
             self.api_url_m_px, headers=self.session.headers, timeout=10
@@ -256,17 +264,6 @@ class BanxicoDataFetcher:
             )
         mbonos_response_coup.raise_for_status()
 
-        # summary data
-        logger.debug("Fetching summary data.")
-        summary_response = self.session.get(
-            self.api_url_summary, headers=self.session.headers, timeout=10
-        )
-        if summary_response.status_code != 200:
-            logger.critical(
-                f"Error acquiring summary data: {summary_response.status_code}"
-            )
-        summary_response.raise_for_status()
-
         # --- parse responses ---
 
         # cetes
@@ -278,19 +275,90 @@ class BanxicoDataFetcher:
         m_dtm_response_json = mbonos_response_dtm.json()["bmx"]["series"]
         m_coup_response_json = mbonos_response_coup.json()["bmx"]["series"]
 
-        # summary data
-        summary_response_json = summary_response.json()["bmx"]["series"]
+         # -- find curve date --
+        returned_datestrings = [x.get("datos")[0]["fecha"] for x in cetes_yld_response_json]
+        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in cetes_dtm_response_json])
+        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_px_response_json])
+        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_dtm_response_json])
+        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_coup_response_json])
 
-        returned_data = {
+        parsed_datestrings = [datetime.strptime(x, "%d/%m/%Y") for x in returned_datestrings]
+
+        # expect all Banxico curve data items to have the same latest date
+        if len(set(parsed_datestrings)) != 1:
+            raise Exception("Banxico API curve data dates are inconsistent.")
+
+        # use curve data to anchor the date of the summary data, preventing data date mismatches
+        # date for front end
+        self.anchor_date = min(parsed_datestrings).strftime("%d/%m/%Y")
+        # date for Banxico API query
+        curve_date = min(parsed_datestrings).strftime("%Y-%m-%d")
+
+        self.api_url_summary = (
+            self.api_url + f"{self.summary_ids}/datos/{curve_date}/{curve_date}?decimales=sinCeros"
+        )
+
+        # use curve data to anchor inflation data search range
+        inflation_from_date = (min(parsed_datestrings) + relativedelta(months=-2))
+        # add 1 day to prevent query from returning more than one result
+        inflation_from_date = (inflation_from_date + relativedelta(days=+1)).strftime("%Y-%m-%d") 
+
+        inflation_to_date = curve_date
+
+        self.api_url_inflation = (
+            self.api_url + f"{self.inflation_ids}/datos/{inflation_from_date}/{inflation_to_date}?decimales=sinCeros"
+        )
+
+        acquired_curve_data = {
             "cetes_yld": cetes_yld_response_json,
             "cetes_dtm": cetes_dtm_response_json,
             "mbonos_px": m_px_response_json,
             "mbonos_dtm": m_dtm_response_json,
             "mbonos_coup": m_coup_response_json,
-            "summary": summary_response_json,
         }
 
-        return returned_data
+        return acquired_curve_data
+    
+    def call_api_summ_inf_data(self):
+
+        # === make the API requests for summary and inflation data ===
+
+        # -- summary --
+        logger.debug("Fetching summary data.")
+        summary_response = self.session.get(
+            self.api_url_summary, headers=self.session.headers, timeout=10
+        )
+        if summary_response.status_code != 200:
+            logger.critical(
+                f"Error acquiring summary data: {summary_response.status_code}"
+            )
+        summary_response.raise_for_status()
+
+        # -- inflation --
+        logger.debug("Fetching inflation data.")
+        inlfation_response = self.session.get(
+            self.api_url_inflation, headers=self.session.headers, timeout=10
+        )
+        if inlfation_response.status_code != 200:
+            logger.critical(
+                f"Error acquiring inflation data: {inlfation_response.status_code}"
+            )
+        inlfation_response.raise_for_status()
+
+        # --- parse responses ---
+
+        # summary
+        summary_response_json = summary_response.json()["bmx"]["series"]
+
+        #inflation
+        inflation_response_json = inlfation_response.json()["bmx"]["series"]
+
+        acquired_summ_inf_data = {
+            "summary": summary_response_json,
+            "inflation": inflation_response_json,
+        }
+
+        return acquired_summ_inf_data
 
     def clean_returned_data(self, px_ylds, dtms, coups=None):
 
@@ -428,7 +496,7 @@ class BanxicoDataFetcher:
                 yld_px_response_data, dtm_response_data, coup_response_data
             )
 
-    def parse_summary_data(self, summary_response_data):
+    def parse_summary_data(self, summ_inf_response_data):
 
         month_to_string = {
             1: "January",
@@ -447,23 +515,37 @@ class BanxicoDataFetcher:
 
         logger.debug("Parsing summary data.")
 
-        parsed_summary = {}
+        parsed_summ_inf = {}
 
-        for series in summary_response_data:
+        # parse summary data
+        for series in summ_inf_response_data["summary"]:
             series_id = series["idSerie"]
             metric = self.SUMMARY_MAP.get(series_id, "Unknown")
             value = round(float(series["datos"][0]["dato"]), 6)
+        
+            dt = series["datos"][0]["fecha"]
 
-            if series_id == "SP30578":
-                month = month_to_string.get(int(series["datos"][0]["fecha"].split("/")[1]))
-                year = int(series["datos"][0]["fecha"].split("/")[2])
-                dt = f"{month} {year-1} - {month} {year}".strip()
-            else:
-                dt = series["datos"][0]["fecha"]
+            parsed_summ_inf[metric] = {"value": value, "date": dt}
+            
+        # parsed inflation data    
+        for series in summ_inf_response_data["inflation"]:
 
-            parsed_summary[metric] = {"value": value, "date": dt}
+            # minus one to get latest incase more than one inflation data point is returned
+            data_index = -1
 
-        return parsed_summary
+            series_id = series["idSerie"]
+            metric = self.INFLATION_MAP.get(series_id, "Unknown")
+            value = round(float(series["datos"][data_index]["dato"]), 6)
+
+            month = month_to_string.get(int(series["datos"][data_index]["fecha"].split("/")[1]))
+            year = int(series["datos"][data_index]["fecha"].split("/")[2])
+
+            # for informative tooltip
+            dt = f"{month} {year - 1} - {month} {year}"
+
+            parsed_summ_inf[metric] = {"value": value, "date": dt}
+
+        return parsed_summ_inf
 
     def prc_to_yld(self, prices, dtms, coups):
 
@@ -524,4 +606,5 @@ class BanxicoDataFetcher:
 
     def __repr__(self):
         return f"<BanxicoData({len(self.CETES_MATURITY_MAP_YLD.keys())} cetes, \
-{len(self.MBONOS_MATURITY_MAP_PX.keys())} mbonos , {len(self.SUMMARY_MAP.keys())} summary stats)>"
+{len(self.MBONOS_MATURITY_MAP_PX.keys())} mbonos , {len(self.SUMMARY_MAP.keys())} summary stats, \
+{len(self.INFLATION_MAP.keys())} inflation stats)>"
