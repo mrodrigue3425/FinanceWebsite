@@ -76,11 +76,24 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             100.123456,
         ]
 
+        curve_ids = [
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "M220301",
+            "M220301",
+            "M220301",
+            "M220301",
+            "M220301",
+        ]
+
         curve_dtms = [28, 91, 182, 364, 720, 1100, 1825, 3650, 7300, 10950]
 
         self.anchor_date = "25/10/2025"
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, mock_summary
+        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids, mock_summary
 
 
 class MockConnectionErrorFetcher:

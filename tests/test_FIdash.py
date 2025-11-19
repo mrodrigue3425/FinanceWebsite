@@ -5,6 +5,8 @@ from src import FIdash
 import random
 import subprocess
 import math
+import requests
+from bs4 import BeautifulSoup
 
 
 def test_banxico_data_initialization():
@@ -30,7 +32,7 @@ def test_banxico_api_calls():
     
     # === test curve data API caller ===
 
-    test_data = test_object.call_api_curve_data()
+    test_curve_data = test_object.call_api_curve_data()
 
     # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
 
@@ -38,35 +40,35 @@ def test_banxico_api_calls():
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_YLD.keys()
-            for y in [x["idSerie"] for x in test_data["cetes_yld"]]
+            for y in [x["idSerie"] for x in test_curve_data["cetes_yld"]]
         ]
     )
     # cetes days to maturity
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_DTM.keys()
-            for y in [x["idSerie"] for x in test_data["cetes_dtm"]]
+            for y in [x["idSerie"] for x in test_curve_data["cetes_dtm"]]
         ]
     )
     # mbonos clean prices
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_PX.keys()
-            for y in [x["idSerie"] for x in test_data["mbonos_px"]]
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_px"]]
         ]
     )
     # mbonos days to maturity
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_DTM.keys()
-            for y in [x["idSerie"] for x in test_data["mbonos_dtm"]]
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_dtm"]]
         ]
     )
     # mbonos coupons
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_COUP.keys()
-            for y in [x["idSerie"] for x in test_data["mbonos_coup"]]
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_coup"]]
         ]
     )
 
@@ -76,41 +78,41 @@ def test_banxico_api_calls():
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["cetes_yld"]
+            for x in test_curve_data["cetes_yld"]
         ]
     )
     # cetes days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
-            for x in test_data["cetes_dtm"]
+            for x in test_curve_data["cetes_dtm"]
         ]
     )
     #mbonos clean prices
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["mbonos_px"]
+            for x in test_curve_data["mbonos_px"]
         ]
     )
     #mbonos days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
-            for x in test_data["mbonos_dtm"]
+            for x in test_curve_data["mbonos_dtm"]
         ]
     )
     # mbonos coupons
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["mbonos_coup"]
+            for x in test_curve_data["mbonos_coup"]
         ]
     )
 
     # === test summary/inflation data API caller ===
 
-    test_data = test_object.call_api_summ_inf_data()
+    test_summ_inf_data = test_object.call_api_summ_inf_data()
 
     # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
 
@@ -118,14 +120,14 @@ def test_banxico_api_calls():
     assert all(
         [
             y in test_object.SUMMARY_MAP.keys()
-            for y in [x["idSerie"] for x in test_data["summary"]]
+            for y in [x["idSerie"] for x in test_summ_inf_data["summary"]]
         ]
     )
     # inflation data
     assert all(
         [
             y in test_object.INFLATION_MAP.keys()
-            for y in [x["idSerie"] for x in test_data["inflation"]]
+            for y in [x["idSerie"] for x in test_summ_inf_data["inflation"]]
         ]
     )
 
@@ -135,19 +137,23 @@ def test_banxico_api_calls():
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["summary"]
+            for x in test_summ_inf_data["summary"]
         ]
     )
     # inflation
     assert all(
         [
             isinstance(float(x["datos"][-1]["dato"]), float)
-            for x in test_data["inflation"]
+            for x in test_summ_inf_data["inflation"]
         ]
     )
 
     # --- test only one inflation point is returned
-    assert len(test_data["inflation"][0]["datos"]) == 1
+    assert len(test_summ_inf_data["inflation"][0]["datos"]) == 1
+    
+    # === test generate_ids === 
+
+    try_generate_ids(test_object, test_curve_data)
 
 def test_clean_returned_data():
 
@@ -583,6 +589,9 @@ def test_get_labels_dates_yields():
     del summ_data
 
     for banxico_data in banxico_data_many:
+
+        test_object.anchor_date = banxico_data["cetes_yld"][0]["datos"][0]["fecha"]
+
         # cetes
         cleaned_cetes_ylds, cleaned_cetes_dtms = test_object.clean_returned_data(
             banxico_data["cetes_yld"], banxico_data["cetes_dtm"]
@@ -617,14 +626,27 @@ def test_get_labels_dates_yields():
             reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups
         )
 
+        # --- generate bond identifiers ---
+
+        cetes_ids, bonos_ids = test_object.generate_ids(reordered_cetes_dtms,reordered_bonos_dtms)
+
         # --- final yield curve data ---
 
         yield_curve_data = {
-            "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
-            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms, "pxs": reordered_bonos_pxs},
+            "cetes": {
+                "ylds": reordered_cetes_ylds,
+                "dtms": reordered_cetes_dtms,
+                "ids": cetes_ids
+            },
+            "mbonos": {
+                "ylds": reordered_bonos_ylds,
+                "pxs": reordered_bonos_pxs,
+                "dtms": reordered_bonos_dtms,
+                "ids": bonos_ids
+            },
         }
 
-        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids = (
             test_object.get_labels_dates_yields(yield_curve_data)
         )
 
@@ -641,6 +663,8 @@ def test_get_labels_dates_yields():
             assert curve_labels[i] == expected_label
             assert curve_dates[i] == expected_date
             assert curve_yields[i] == expected_yield
+
+            assert curve_ids[i][:2] == "BI"
 
             try:
                 # Attempt to parse the string using the format code
@@ -688,6 +712,8 @@ def test_get_labels_dates_yields():
             assert curve_labels[i + 5] == expected_label
             assert curve_dates[i + 5] == expected_date
             assert curve_yields[i + 5] == expected_yield
+
+            assert curve_ids[i + 5][:1] == "M"
 
             try:
                 # Attempt to parse the string using the format code
@@ -979,3 +1005,92 @@ def find_d(dtms):
         remainder = DPP - (dtm % DPP)
         d.append(0 if remainder == DPP else remainder)
     return d
+
+def try_generate_ids(test_object, test_curve_data):
+
+    mes_to_num = {
+        "enero": 1,
+        "febrero": 2,
+        "marzo": 3,
+        "abril": 4,
+        "mayo": 5,
+        "junio": 6,
+        "julio": 7,
+        "agosto": 8,
+        "septiembre": 9,
+        "octubre": 10,
+        "noviembre": 11,
+        "diciembre": 12,
+    }
+
+    type_to_prefix = {
+        "cetes": "BI",
+        "bonos": "M",
+    }
+
+    def check_ids(id_list, url):
+        # get url html
+        response = requests.get(url)
+        response.raise_for_status()
+        # parse acquired html
+        html = response.text
+        soup = BeautifulSoup(html, "html.parser")
+        # extract type of bond
+        header = soup.find("span", class_="tituloscont").text
+        prefix = type_to_prefix.get(header.split(" ")[0].lower())
+        # extract maturities from table
+        table = soup.find(id="_id0:tablaDetallesPosicion").find("tbody")
+        mat_dates = [x.find("td").text for x in table.find_all("tr")][:-1]
+        # generate ids to compare
+        ids_to_compare = [f"{prefix}{x.split('/')[2][-2:]}{x.split('/')[1]}{x.split('/')[0]}" for x in mat_dates]
+
+        assert all([x in ids_to_compare for x in id_list])
+
+    # --- clean returned curve data ---
+
+    # cetes
+    cleaned_cetes_ylds, cleaned_cetes_dtms = test_object.clean_returned_data(
+        test_curve_data["cetes_yld"], test_curve_data["cetes_dtm"]
+    )
+
+    # mbonos
+    cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
+        test_object.clean_returned_data(
+            test_curve_data["mbonos_px"],
+            test_curve_data["mbonos_dtm"],
+            test_curve_data["mbonos_coup"],
+        )
+    )
+
+    # --- reorder returned curve data ---
+
+    # cetes
+    reordered_cetes_ylds, reordered_cetes_dtms = test_object.reorder_data(
+        cleaned_cetes_ylds, cleaned_cetes_dtms
+    )
+
+    # reordered cetes yields not required for this test
+    del reordered_cetes_ylds
+
+    # mbonos
+    reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = (
+        test_object.reorder_data(
+            cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups
+        )
+    )
+
+    # reordered bonos prices and coupon rates not required for this test
+    del reordered_bonos_pxs, reordered_bonos_coups
+
+    # --- generate bond identifiers ---
+
+    id_lists = list(test_object.generate_ids(reordered_cetes_dtms,reordered_bonos_dtms))
+
+    # amount outstanding urls
+    amt_urls = {
+        "cetes": "https://www.banxico.org.mx/valores/PresentaDetallePosicionGub.faces?BMXC_instrumento=1&BMXC_lang=es_MX",
+        "bonos": "https://www.banxico.org.mx/valores/PresentaDetallePosicionGub.faces?BMXC_instrumento=2&BMXC_lang=es_MX",
+    }
+
+    for i, url in enumerate(amt_urls.values()):
+        check_ids(id_lists[i], url)
