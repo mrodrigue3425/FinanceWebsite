@@ -2,6 +2,45 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // === 1. DATE PICKER ===
 
+    // function to check if date is a holiday
+    function isHoliday(date) {
+        const d = date.getDate();
+        const m = date.getMonth();   
+        const day = date.getDay();   
+    
+        // fixed-date holidays
+        if (m === 11 && d === 25) return `Christmas`
+        if (m === 0 && d === 1) return `New Year's Day`
+        if (m === 4 && d === 1) return `Labor Day`
+        if (m === 8 && d === 16) return `Independence Day`
+        if (m === 11 && d === 12) return `Our Lady of Guadalupe`
+        if (m === 10 && d === 1) return `All Saints Day`
+    
+        // Constitution Day: first Monday of Feb
+        if (m === 1 && day === 1 && d < 8) return `Constitution Day`;
+        
+        // Benito Juárez: third Monday of March
+        if (m === 2 && day === 1 && d > 14 && d < 22) return `Birthday of Benito Juárez`;
+    
+        // Revolution Day: third Monday of November
+        if (m === 10 && day === 1 && d > 14 && d < 22) return `Revolution Day`;
+    
+        // Holy Thursday & Friday
+        const year = date.getFullYear();
+        const easter = getEasterDate(year);
+    
+        const holyThu = new Date(easter);
+        holyThu.setDate(holyThu.getDate() - 3);
+    
+        const holyFri = new Date(easter);
+        holyFri.setDate(holyFri.getDate() - 2);
+
+        if (date.toDateString() === holyThu.toDateString()) return `Holy Thursday`
+        if (date.toDateString() === holyFri.toDateString()) return `Holy Friday`
+    
+        return false;
+    }
+
     // computus algorithm for easter sunday
     function getEasterDate(year) {
         const a = year % 19;
@@ -30,81 +69,30 @@ window.addEventListener("DOMContentLoaded", () => {
         
         // disable non business days
         "disable": [
-            // weekends
             function(date) {
-                return (date.getDay() === 0 || date.getDay() === 6);
-    
-            },
+                // weekends
+                if (date.getDay() === 0 || date.getDay() === 6) return true;
 
-            // christmas: 25/12
-            function(date) {
-                return (date.getMonth() === 11 && date.getDate() === 25);
-            },
-            // new years day: 01/01
-            function(date) {
-                return (date.getMonth() === 0 && date.getDate() === 1);
-            },
-            // labor day: 01/05
-            function(date) {
-                return (date.getMonth() === 4 && date.getDate() === 1);
-            },
-            // independence day: 16/09
-            function(date) {
-                return (date.getMonth() === 8 && date.getDate() === 16);
-            },
-            // virgin of guadalupe day
-            function(date) {
-                return (date.getMonth() === 11 && date.getDate() === 12);
-            },
-            // all saints day: 01/11
-            function(date) {
-                return (date.getMonth() === 10 && date.getDate() === 1);
-            },
+                // holidays
+                return isHoliday(date);
+            }
 
-            // constitution day: every first monday of february
-            function(date) {
-                return (
-                    date.getDay() === 1 &&
-                    date.getMonth() === 1 &&
-                    date.getDate() < 8)
-            },
-            // revolution day: every third monday of november
-            function(date) {
-                return (
-                    date.getDay() === 1 &&
-                    date.getMonth() === 10 &&
-                    date.getDate() > 14 &&
-                    date.getDate() < 22
-                )
-            },
-            // benito juarez birthday: every third monday of march
-            function(date) {
-                return(
-                    date.getMonth() === 2 &&    
-                    date.getDay() === 1 &&      
-                    date.getDate() > 14 &&     
-                    date.getDate() < 22        
-                )
-            },
-            // holy thursday and friday: thursday and friday preceding easter sunday
-            function(date) {
-                const year = date.getFullYear();
-                const easter = getEasterDate(year);
-
-                console.log(easter)
-
-                const holyThursday = new Date(easter);
-                holyThursday.setDate(holyThursday.getDate() -3)
-
-                const holyFriday = new Date(easter)
-                holyFriday.setDate(holyFriday.getDate() -2)
-
-                return(
-                    date.toDateString() ===  holyThursday.toDateString() ||
-                    date.toDateString() === holyFriday.toDateString()
-                )
-            },
         ],
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            const date = dayElem.dateObj;
+
+            // WEEKENDS
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                dayElem.classList.add("wknd");  
+                return; 
+            }
+        
+            // HOLIDAYS
+            if (isHoliday(date)) {
+                dayElem.classList.add("holiday");
+                dayElem.title = isHoliday(date);
+            }
+        },
         onOpen(selectedDates, dateStr, instance) {
             instance.calendarContainer.style.fontFamily = 'Inter, system-ui, sans-serif';
             instance.calendarContainer.style.fontSize = '1rem';
