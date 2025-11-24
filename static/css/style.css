@@ -11,3 +11,78 @@ main {
     max-width: 200px;
 }
 
+
+/* --- Date Picker --- */
+
+/* whole date picker font */
+.flatpickr-calendar.animate.open.arrowTop.arrowLeft.rightMost{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+.flatpickr-day.wknd {
+    background: #f0f0f0;
+    color: #999;
+}
+
+/* holidays in same month (grey backround) */
+.flatpickr-day.holiday:not(.nextMonthDay):not(.prevMonthDay),
+.flatpickr-day.holiday.flatpickr-disabled:not(.nextMonthDay):not(.prevMonthDay) {
+    background: #EAF4F7 !important;
+    color: #626A75 !important;
+    border-color:  dotted #999999;
+    border-radius: 4px;
+}
+
+.flatpickr-day.nextMonthDay.flatpickr-disabled.holiday {
+    color: #3939394D !important;
+}
+
+.flatpickr-day.prevMonthDay.flatpickr-disabled.holiday {
+    color: #3939394D !important;
+}
+
+/* selected date square and blue with bold white text */
+.flatpickr-day.selected {
+    background: #0d6efd !important; 
+    font-weight: bold !important; 
+    color: white !important;
+    border-radius: 4px !important; 
+}
+/* hover over dates grey*/
+.flatpickr-day:hover:not(.nextMonthDay):not(.prevMonthDay):not(.flatpickr-disabled){
+    background: #e9ecef !important; 
+    color: black !important;
+    border-radius: 4px !important; 
+}
+
+/* prev month hover only border*/
+.flatpickr-day.prevMonthDay:hover{
+    background: white !important; 
+    border-radius: 4px !important; 
+}
+
+/* next month hover only border*/
+.flatpickr-day.nextMonthDay:hover{
+    background: white !important; 
+    border-radius: 4px !important; 
+}
+
+/* drop down months */
+.flatpickr-monthDropdown-month{
+    font-size: 16px;
+    color: #4A4A4A !important;
+}
+
+/* menu month*/
+.flatpickr-monthDropdown-months{
+    font-size: 17px !important;
+    color: #4A4A4A !important;
+}
+
+/* menu year*/
+.numInput.cur-year{
+    font-size: 17px !important;
+    color: #4A4A4A !important;
+}
+
+
