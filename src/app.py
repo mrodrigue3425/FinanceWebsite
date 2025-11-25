@@ -129,14 +129,6 @@ def fi_dashboard():
         anchor_date=banxico_data_fetcher.anchor_date
     )
 
-
-# options pricer route
-@app.route("/options_pricing")
-def options_pricer():
-    logger.debug("Rendering options pricing.")
-    return render_template("options_pricing.html")
-
-
 # --- Error Handling ---
 
 
