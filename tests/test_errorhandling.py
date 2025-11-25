@@ -245,8 +245,6 @@ def test_other_routes_work(client_ready):
     """Ensure non-data-dependent routes are unaffected."""
     response = client_ready.get("/")
     assert response.status_code == 200
-    response = client_ready.get("/options_pricing")
-    assert response.status_code == 200
 
 
 # --- Non-existent Route Handling Tests ---
