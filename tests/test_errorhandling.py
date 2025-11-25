@@ -93,7 +93,15 @@ class MockSuccessFetcher(BanxicoDataFetcher):
 
         self.anchor_date = "25/10/2025"
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids, mock_summary
+        return (
+            curve_labels,
+            curve_dates,
+            curve_yields,
+            curve_dtms,
+            curve_pxs,
+            curve_ids,
+            mock_summary,
+        )
 
 
 class MockConnectionErrorFetcher:

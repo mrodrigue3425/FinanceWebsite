@@ -197,7 +197,9 @@ class BanxicoDataFetcher:
 
         # --- generate bond identifiers ---
 
-        cetes_ids, bonos_ids = self.generate_ids(reordered_cetes_dtms,reordered_bonos_dtms)
+        cetes_ids, bonos_ids = self.generate_ids(
+            reordered_cetes_dtms, reordered_bonos_dtms
+        )
 
         # --- final yield curve data ---
 
@@ -205,13 +207,13 @@ class BanxicoDataFetcher:
             "cetes": {
                 "ylds": reordered_cetes_ylds,
                 "dtms": reordered_cetes_dtms,
-                "ids": cetes_ids
+                "ids": cetes_ids,
             },
             "mbonos": {
                 "ylds": reordered_bonos_ylds,
                 "pxs": reordered_bonos_pxs,
                 "dtms": reordered_bonos_dtms,
-                "ids": bonos_ids
+                "ids": bonos_ids,
             },
         }
 
@@ -223,7 +225,15 @@ class BanxicoDataFetcher:
 
         parsed_summary_data = self.parse_summary_data(banxico_summ_inf_data)
 
-        return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids, parsed_summary_data
+        return (
+            curve_labels,
+            curve_dates,
+            curve_yields,
+            curve_dtms,
+            curve_pxs,
+            curve_ids,
+            parsed_summary_data,
+        )
 
     def call_api_curve_data(self):
 
@@ -292,14 +302,26 @@ class BanxicoDataFetcher:
         m_dtm_response_json = mbonos_response_dtm.json()["bmx"]["series"]
         m_coup_response_json = mbonos_response_coup.json()["bmx"]["series"]
 
-         # -- find curve date --
-        returned_datestrings = [x.get("datos")[0]["fecha"] for x in cetes_yld_response_json]
-        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in cetes_dtm_response_json])
-        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_px_response_json])
-        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_dtm_response_json])
-        returned_datestrings.extend([x.get("datos")[0]["fecha"] for x in m_coup_response_json])
+        # -- find curve date --
+        returned_datestrings = [
+            x.get("datos")[0]["fecha"] for x in cetes_yld_response_json
+        ]
+        returned_datestrings.extend(
+            [x.get("datos")[0]["fecha"] for x in cetes_dtm_response_json]
+        )
+        returned_datestrings.extend(
+            [x.get("datos")[0]["fecha"] for x in m_px_response_json]
+        )
+        returned_datestrings.extend(
+            [x.get("datos")[0]["fecha"] for x in m_dtm_response_json]
+        )
+        returned_datestrings.extend(
+            [x.get("datos")[0]["fecha"] for x in m_coup_response_json]
+        )
 
-        parsed_datestrings = [datetime.strptime(x, "%d/%m/%Y") for x in returned_datestrings]
+        parsed_datestrings = [
+            datetime.strptime(x, "%d/%m/%Y") for x in returned_datestrings
+        ]
 
         # expect all Banxico curve data items to have the same latest date
         if len(set(parsed_datestrings)) != 1:
@@ -312,18 +334,22 @@ class BanxicoDataFetcher:
         curve_date = min(parsed_datestrings).strftime("%Y-%m-%d")
 
         self.api_url_summary = (
-            self.api_url + f"{self.summary_ids}/datos/{curve_date}/{curve_date}?decimales=sinCeros"
+            self.api_url
+            + f"{self.summary_ids}/datos/{curve_date}/{curve_date}?decimales=sinCeros"
         )
 
         # use curve data to anchor inflation data search range
-        inflation_from_date = (min(parsed_datestrings) + relativedelta(months=-2))
+        inflation_from_date = min(parsed_datestrings) + relativedelta(months=-2)
         # add 1 day to prevent query from returning more than one result
-        inflation_from_date = (inflation_from_date + relativedelta(days=+1)).strftime("%Y-%m-%d") 
+        inflation_from_date = (inflation_from_date + relativedelta(days=+1)).strftime(
+            "%Y-%m-%d"
+        )
 
         inflation_to_date = curve_date
 
         self.api_url_inflation = (
-            self.api_url + f"{self.inflation_ids}/datos/{inflation_from_date}/{inflation_to_date}?decimales=sinCeros"
+            self.api_url
+            + f"{self.inflation_ids}/datos/{inflation_from_date}/{inflation_to_date}?decimales=sinCeros"
         )
 
         acquired_curve_data = {
@@ -335,7 +361,7 @@ class BanxicoDataFetcher:
         }
 
         return acquired_curve_data
-    
+
     def call_api_summ_inf_data(self):
 
         # === make the API requests for summary and inflation data ===
@@ -367,7 +393,7 @@ class BanxicoDataFetcher:
         # summary
         summary_response_json = summary_response.json()["bmx"]["series"]
 
-        #inflation
+        # inflation
         inflation_response_json = inlfation_response.json()["bmx"]["series"]
 
         acquired_summ_inf_data = {
@@ -527,7 +553,7 @@ class BanxicoDataFetcher:
             9: "September",
             10: "October",
             11: "November",
-            12: "December"
+            12: "December",
         }
 
         logger.debug("Parsing summary data.")
@@ -539,12 +565,12 @@ class BanxicoDataFetcher:
             series_id = series["idSerie"]
             metric = self.SUMMARY_MAP.get(series_id, "Unknown")
             value = round(float(series["datos"][0]["dato"]), 6)
-        
+
             dt = series["datos"][0]["fecha"]
 
             parsed_summ_inf[metric] = {"value": value, "date": dt}
-            
-        # parsed inflation data    
+
+        # parsed inflation data
         for series in summ_inf_response_data["inflation"]:
 
             # minus one to get latest incase more than one inflation data point is returned
@@ -554,7 +580,9 @@ class BanxicoDataFetcher:
             metric = self.INFLATION_MAP.get(series_id, "Unknown")
             value = round(float(series["datos"][data_index]["dato"]), 6)
 
-            month = month_to_string.get(int(series["datos"][data_index]["fecha"].split("/")[1]))
+            month = month_to_string.get(
+                int(series["datos"][data_index]["fecha"].split("/")[1])
+            )
             year = int(series["datos"][data_index]["fecha"].split("/")[2])
 
             # for informative tooltip
@@ -590,22 +618,36 @@ class BanxicoDataFetcher:
 
         for cete in cetes_dtms:
             dtm = cete.get("datos")[0].get("dato")
-            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(days=dtm)
-            id = "BI" + str(mat.year)[2:] + str(mat.month).zfill(2) + str(mat.day).zfill(2)
+            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(
+                days=dtm
+            )
+            id = (
+                "BI"
+                + str(mat.year)[2:]
+                + str(mat.month).zfill(2)
+                + str(mat.day).zfill(2)
+            )
             cetes_ids.append(id)
 
         for mbono in bonos_dtms:
             dtm = mbono.get("datos")[0].get("dato")
-            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(days=dtm)
-            id = "M" + str(mat.year)[2:] + str(mat.month).zfill(2) + str(mat.day).zfill(2)
-            bonos_ids.append(id)  
+            mat = datetime.strptime(self.anchor_date, "%d/%m/%Y") + relativedelta(
+                days=dtm
+            )
+            id = (
+                "M"
+                + str(mat.year)[2:]
+                + str(mat.month).zfill(2)
+                + str(mat.day).zfill(2)
+            )
+            bonos_ids.append(id)
 
         return cetes_ids, bonos_ids
 
     def get_labels_dates_yields(self, curve_dict):
 
-        def yield_to_price(yld,d):
-            px = 10/(1+((yld*d)/36000))
+        def yield_to_price(yld, d):
+            px = 10 / (1 + ((yld * d) / 36000))
             return px
 
         # get labels, dates, and yields to parse in html
@@ -616,28 +658,39 @@ class BanxicoDataFetcher:
         curve_yields = []
         curve_dtms = []
         curve_pxs = []
-        curve_ids= []
+        curve_ids = []
 
         # cetes
         for i, tenor in enumerate(curve_dict.get("cetes").get("ylds")):
-            curve_labels.append(self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")) + " CETES")
+            curve_labels.append(
+                self.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")) + " CETES"
+            )
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
             curve_dtms.append(
                 curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")
             )
-            curve_pxs.append(yield_to_price(tenor.get("datos")[0].get("dato"),curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato")))
+            curve_pxs.append(
+                yield_to_price(
+                    tenor.get("datos")[0].get("dato"),
+                    curve_dict.get("cetes").get("dtms")[i].get("datos")[0].get("dato"),
+                )
+            )
             curve_ids.append(curve_dict.get("cetes").get("ids")[i])
 
         # mbonos
         for i, tenor in enumerate(curve_dict.get("mbonos").get("ylds")):
-            curve_labels.append(self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")) + " MBONOS")
+            curve_labels.append(
+                self.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")) + " MBONOS"
+            )
             curve_dates.append(tenor.get("datos")[0].get("fecha"))
             curve_yields.append(tenor.get("datos")[0].get("dato"))
             curve_dtms.append(
                 curve_dict.get("mbonos").get("dtms")[i].get("datos")[0].get("dato")
             )
-            curve_pxs.append(curve_dict.get("mbonos").get("pxs")[i].get("datos")[0].get("dato"))
+            curve_pxs.append(
+                curve_dict.get("mbonos").get("pxs")[i].get("datos")[0].get("dato")
+            )
             curve_ids.append(curve_dict.get("mbonos").get("ids")[i])
 
         return curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids

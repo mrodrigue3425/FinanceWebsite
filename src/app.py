@@ -39,11 +39,7 @@ except Exception as e:
     banxico_data_fetcher = None
 
 # declare flask app
-app = Flask(
-    __name__,
-    static_folder=static_path,
-    template_folder=template_path
-    )
+app = Flask(__name__, static_folder=static_path, template_folder=template_path)
 
 # --- Routes ---
 
@@ -69,9 +65,15 @@ def fi_dashboard():
 
     # try get banxico data
     try:
-        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids, summary_data = (
-            banxico_data_fetcher.get_data()
-        )
+        (
+            curve_labels,
+            curve_dates,
+            curve_yields,
+            curve_dtms,
+            curve_pxs,
+            curve_ids,
+            summary_data,
+        ) = banxico_data_fetcher.get_data()
         logger.info("Retrieved data from Banxico API successfully.")
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         # connection errors
@@ -126,8 +128,9 @@ def fi_dashboard():
         curve_pxs=curve_pxs,
         curve_ids=curve_ids,
         summary_data=summary_data,
-        anchor_date=banxico_data_fetcher.anchor_date
+        anchor_date=banxico_data_fetcher.anchor_date,
     )
+
 
 # --- Error Handling ---
 
