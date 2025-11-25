@@ -5,7 +5,7 @@ import logging
 import cpp_engine
 import copy
 from datetime import datetime
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 
 
 # load environment variables from .env file

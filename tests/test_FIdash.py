@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import datetime
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 from src import FIdash
 import random
 import subprocess
@@ -1019,21 +1019,6 @@ def find_d(dtms):
 
 
 def try_generate_ids(test_object, test_curve_data):
-
-    mes_to_num = {
-        "enero": 1,
-        "febrero": 2,
-        "marzo": 3,
-        "abril": 4,
-        "mayo": 5,
-        "junio": 6,
-        "julio": 7,
-        "agosto": 8,
-        "septiembre": 9,
-        "octubre": 10,
-        "noviembre": 11,
-        "diciembre": 12,
-    }
 
     type_to_prefix = {
         "cetes": "BI",
