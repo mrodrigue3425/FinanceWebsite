@@ -27,7 +27,7 @@ main {
 /* holidays in same month (grey backround) */
 .flatpickr-day.holiday:not(.nextMonthDay):not(.prevMonthDay),
 .flatpickr-day.holiday.flatpickr-disabled:not(.nextMonthDay):not(.prevMonthDay) {
-    background: #EAF4F7 !important;
+    background: #efe9ea !important;
     color: #626A75 !important;
     border-color:  dotted #999999;
     border-radius: 4px;
@@ -48,11 +48,12 @@ main {
     color: white !important;
     border-radius: 4px !important; 
 }
-/* hover over dates grey*/
+/* hover over dates light blue*/
 .flatpickr-day:hover:not(.nextMonthDay):not(.prevMonthDay):not(.flatpickr-disabled){
-    background: #e9ecef !important; 
+    background: #EAF4F7 !important; 
     color: black !important;
     border-radius: 4px !important; 
+    border-color: #EAF4F7 !important;
 }
 
 /* prev month hover only border*/
