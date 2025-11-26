@@ -24,7 +24,7 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             "TargetRate": {"value": 7.5, "date": "29/10/2025"},
             "USD_MXN": {"value": 18.4315, "date": "28/10/2025"},
             "UDI_MXN": {"value": 8.586547, "date": "10/11/2025"},
-            "Inflation": {"value": 3.76, "date": "01/09/2025"},
+            "MonthlyCPIYoY": {"value": 3.76, "date": "01/09/2025"},
         }
         curve_labels = [
             "28 Days",
@@ -63,8 +63,45 @@ class MockSuccessFetcher(BanxicoDataFetcher):
             7.679998,
         ]
 
+        curve_pxs = [
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+            100.123456,
+        ]
+
+        curve_ids = [
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "BI220301",
+            "M220301",
+            "M220301",
+            "M220301",
+            "M220301",
+            "M220301",
+        ]
+
         curve_dtms = [28, 91, 182, 364, 720, 1100, 1825, 3650, 7300, 10950]
-        return curve_labels, curve_dates, curve_yields, curve_dtms, mock_summary
+
+        self.anchor_date = "25/10/2025"
+
+        return (
+            curve_labels,
+            curve_dates,
+            curve_yields,
+            curve_dtms,
+            curve_pxs,
+            curve_ids,
+            mock_summary,
+        )
 
 
 class MockConnectionErrorFetcher:
@@ -215,8 +252,6 @@ def test_fi_dashboard_route_errors(client_failing_route):
 def test_other_routes_work(client_ready):
     """Ensure non-data-dependent routes are unaffected."""
     response = client_ready.get("/")
-    assert response.status_code == 200
-    response = client_ready.get("/options_pricing")
     assert response.status_code == 200
 
 

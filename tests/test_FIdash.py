@@ -1,9 +1,12 @@
 import numpy as np
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from src import FIdash
 import random
 import subprocess
 import math
+import requests
+from bs4 import BeautifulSoup
 
 
 def test_banxico_data_initialization():
@@ -19,80 +22,138 @@ def test_banxico_data_initialization():
     ids.update(test_object.MBONOS_MATURITY_MAP_DTM)
     ids.update(test_object.MBONOS_MATURITY_MAP_COUP)
     ids.update(test_object.SUMMARY_MAP)
+    ids.update(test_object.INFLATION_MAP)
 
     assert len(ids) == len(set(ids.keys()))
 
 
-def test_call_api():
+def test_banxico_api_calls():
     test_object = FIdash.BanxicoDataFetcher()
-    test_data = test_object.call_api()
 
-    # test returned series ids are the same as defined in BanxicoDataFetcher
+    # === test curve data API caller ===
+
+    test_curve_data = test_object.call_api_curve_data()
+
+    # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
+
+    # cetes yields
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_YLD.keys()
-            for y in [x["idSerie"] for x in test_data["cetes_yld"]]
+            for y in [x["idSerie"] for x in test_curve_data["cetes_yld"]]
         ]
     )
+    # cetes days to maturity
     assert all(
         [
             y in test_object.CETES_MATURITY_MAP_DTM.keys()
-            for y in [x["idSerie"] for x in test_data["cetes_dtm"]]
+            for y in [x["idSerie"] for x in test_curve_data["cetes_dtm"]]
         ]
     )
+    # mbonos clean prices
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_PX.keys()
-            for y in [x["idSerie"] for x in test_data["mbonos_px"]]
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_px"]]
         ]
     )
+    # mbonos days to maturity
+    assert all(
+        [
+            y in test_object.MBONOS_MATURITY_MAP_DTM.keys()
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_dtm"]]
+        ]
+    )
+    # mbonos coupons
     assert all(
         [
             y in test_object.MBONOS_MATURITY_MAP_COUP.keys()
-            for y in [x["idSerie"] for x in test_data["mbonos_coup"]]
-        ]
-    )
-    assert all(
-        [
-            y in test_object.SUMMARY_MAP.keys()
-            for y in [x["idSerie"] for x in test_data["summary"]]
+            for y in [x["idSerie"] for x in test_curve_data["mbonos_coup"]]
         ]
     )
 
-    # test all returned data is numeric
+    # --- test all returned  data is numeric ---
+
+    # cetes yields
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["cetes_yld"]
+            for x in test_curve_data["cetes_yld"]
         ]
     )
+    # cetes days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
-            for x in test_data["cetes_dtm"]
+            for x in test_curve_data["cetes_dtm"]
         ]
     )
+    # mbonos clean prices
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["mbonos_px"]
+            for x in test_curve_data["mbonos_px"]
         ]
     )
+    # mbonos days to maturity
     assert all(
         [
             isinstance(int(float(x["datos"][0]["dato"].replace(",", ""))), int)
-            for x in test_data["mbonos_dtm"]
+            for x in test_curve_data["mbonos_dtm"]
         ]
     )
+    # mbonos coupons
     assert all(
         [
             isinstance(float(x["datos"][0]["dato"]), float)
-            for x in test_data["mbonos_coup"]
+            for x in test_curve_data["mbonos_coup"]
         ]
     )
+
+    # === test summary/inflation data API caller ===
+
+    test_summ_inf_data = test_object.call_api_summ_inf_data()
+
+    # --- test returned series ids are the same as defined in BanxicoDataFetcher ---
+
+    # summary data
     assert all(
-        [isinstance(float(x["datos"][0]["dato"]), float) for x in test_data["summary"]]
+        [
+            y in test_object.SUMMARY_MAP.keys()
+            for y in [x["idSerie"] for x in test_summ_inf_data["summary"]]
+        ]
     )
+    # inflation data
+    assert all(
+        [
+            y in test_object.INFLATION_MAP.keys()
+            for y in [x["idSerie"] for x in test_summ_inf_data["inflation"]]
+        ]
+    )
+
+    # --- test all returned data is numeric ---
+
+    # summary
+    assert all(
+        [
+            isinstance(float(x["datos"][0]["dato"]), float)
+            for x in test_summ_inf_data["summary"]
+        ]
+    )
+    # inflation
+    assert all(
+        [
+            isinstance(float(x["datos"][-1]["dato"]), float)
+            for x in test_summ_inf_data["inflation"]
+        ]
+    )
+
+    # --- test only one inflation point is returned
+    assert len(test_summ_inf_data["inflation"][0]["datos"]) == 1
+
+    # === test generate_ids ===
+
+    try_generate_ids(test_object, test_curve_data)
 
 
 def test_clean_returned_data():
@@ -100,7 +161,10 @@ def test_clean_returned_data():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -134,7 +198,10 @@ def test_reorder_data():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -189,19 +256,13 @@ def test_reorder_data():
         # test yield data is reordered correctly with increasing days to maturity
         yld_maturities_in_days = [
             (
-                int(
-                    test_object.CETES_MATURITY_MAP_YLD.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
-                )
-                if test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))
-                .split()[1]
-                .lower()
-                == "days"
+                int(test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))[:-1])
+                if test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))[
+                    -1
+                ].lower()
+                == "d"
                 else int(
-                    test_object.CETES_MATURITY_MAP_YLD.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
+                    test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie"))[:-1]
                 )
                 * 364
             )
@@ -272,19 +333,13 @@ def test_reorder_data():
         # test price data is reordered correctly with increasing days to maturity
         px_maturities_in_days = [
             (
-                int(
-                    test_object.MBONOS_MATURITY_MAP_PX.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
-                )
+                int(test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))[:-1])
                 if test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))
-                .split()[1]
+                .split()[-1]
                 .lower()
-                == "days"
+                == "d"
                 else int(
-                    test_object.MBONOS_MATURITY_MAP_PX.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
+                    test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie"))[:-1]
                 )
                 * 364
             )
@@ -296,19 +351,13 @@ def test_reorder_data():
         # test coup data is reordered correctly with increasing days to maturity
         coup_maturities_in_days = [
             (
-                int(
-                    test_object.MBONOS_MATURITY_MAP_COUP.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
-                )
-                if test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))
-                .split()[1]
-                .lower()
-                == "days"
+                int(test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))[:-1])
+                if test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))[
+                    -1
+                ].lower()
+                == "d"
                 else int(
-                    test_object.MBONOS_MATURITY_MAP_COUP.get(
-                        tenor.get("idSerie")
-                    ).split()[0]
+                    test_object.MBONOS_MATURITY_MAP_COUP.get(tenor.get("idSerie"))[:-1]
                 )
                 * 364
             )
@@ -327,11 +376,17 @@ def test_reorder_data():
 
 
 def test_prc_to_yld():
+    """
+    input MAX PRECISION (15dp) generated yields into pricing formula and compare ouputs with original prices
+    """
 
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
 
@@ -374,6 +429,74 @@ def test_prc_to_yld():
         assert pxs == pxs_to_compare
 
 
+def test_prc_to_yld_min_precision():
+    """
+    Determine minimum precision required on computed yields
+    to always produce prices (when input into pricing formula)
+    accurate to 6dp compared to original input prices.
+
+    Note:
+    - set API responses to 1000 to reduce pytest execution time.
+    - 1000 sufficient to trigger assertion error at 7dp precision.
+    - 8dp precision passes w/ 1000 and 10000 API responses aswell.
+    """
+
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    banxico_data_many, summ_data = generate_random_API_responses(1000)
+
+    # summary data not required for this test
+    del summ_data
+
+    for banxico_data in banxico_data_many:
+
+        # mbonos
+        cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
+            test_object.clean_returned_data(
+                banxico_data["mbonos_px"],
+                banxico_data["mbonos_dtm"],
+                banxico_data["mbonos_coup"],
+            )
+        )
+
+        # --- reorder returned data ---
+
+        # mbonos
+        reordered_mbonos_pxs, reordered_mbonos_dtms, reordered_mbonos_coups = (
+            test_object.reorder_data(
+                cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups
+            )
+        )
+
+        # --- convert mbono prices into yields ---
+
+        reordered_bonos_ylds = test_object.prc_to_yld(
+            reordered_mbonos_pxs, reordered_mbonos_dtms, reordered_mbonos_coups
+        )
+
+        ylds = [x.get("datos")[0].get("dato") for x in reordered_bonos_ylds]
+
+        TCs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_coups]
+        ds = find_d([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+        Ks = find_k([x.get("datos")[0].get("dato") for x in reordered_mbonos_dtms])
+
+        # find precision necessary to always match acquired yield with input price
+
+        precision = 8  # ADJUST PRECISION HERE
+        rounded_ylds = [round(yld, precision) for yld in ylds]
+
+        pxs_to_compare = []
+        for i in range(len(ylds)):
+            pxs_to_compare.append(
+                round(yld_to_px(TCs[i], rounded_ylds[i], Ks[i], ds[i]), 6)
+            )
+
+        pxs = [x.get("datos")[0].get("dato") for x in reordered_mbonos_pxs]
+
+        assert pxs == pxs_to_compare
+
+
 def test_cpp_price_to_yield():
     result = subprocess.run(
         [
@@ -387,13 +510,94 @@ def test_cpp_price_to_yield():
     assert result.returncode == 0, "GTest failed!"
 
 
+def test_parse_summary_data():
+
+    month_to_string = {
+        "01": "January",
+        "02": "February",
+        "03": "March",
+        "04": "April",
+        "05": "May",
+        "06": "June",
+        "07": "July",
+        "08": "August",
+        "09": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December",
+    }
+    test_object = FIdash.BanxicoDataFetcher()
+
+    # generate random data
+    curve_data, summary_data_many = generate_random_API_responses(100)
+
+    # curve data not required for this test
+    del curve_data
+
+    all_vals = list(test_object.SUMMARY_MAP.values()) + list(
+        test_object.INFLATION_MAP.values()
+    )
+
+    for summary_data in summary_data_many:
+
+        parsed_summary_data = test_object.parse_summary_data(summary_data)
+
+        # Ensure keys of output are correct
+        assert all(
+            [
+                list(parsed_summary_data.keys())[x] in all_vals
+                for x in range(len(parsed_summary_data))
+            ]
+        )
+
+        # These dates should be the same
+        dates = [
+            parsed_summary_data.get(x).get("date")
+            for x in ["TIIEF", "TIIE28", "UDI_MXN", "TargetRate", "USD_MXN"]
+        ]
+        assert len(set(dates)) == 1
+
+        # This should be different
+        assert parsed_summary_data.get("MonthlyCPIYoY") not in dates
+
+        # Make sure Inflation dt is correct
+        mnth = month_to_string.get(
+            parsed_summary_data.get("TIIEF").get("date").split("/")[1]
+        )
+        yr = int(parsed_summary_data.get("TIIEF").get("date")[-4:])
+        if mnth == "January":
+            mnth_minus = "December"
+            yr = yr - 1
+            yrm1 = yr - 1
+        else:
+            mnth_minus = month_to_string.get(
+                str(
+                    (
+                        int(parsed_summary_data.get("TIIEF").get("date").split("/")[1])
+                        - 1
+                    )
+                ).zfill(2)
+            )
+            yrm1 = yr - 1
+
+        assert parsed_summary_data.get("MonthlyCPIYoY").get(
+            "date"
+        ) == mnth_minus + " " + str(yrm1) + " - " + mnth_minus + " " + str(yr)
+
+
 def test_get_labels_dates_yields():
     test_object = FIdash.BanxicoDataFetcher()
 
     # generate random data
-    banxico_data_many = generate_random_API_responses(100)
+    banxico_data_many, summ_data = generate_random_API_responses(100)
+
+    # summary data not required for this test
+    del summ_data
 
     for banxico_data in banxico_data_many:
+
+        test_object.anchor_date = banxico_data["cetes_yld"][0]["datos"][0]["fecha"]
+
         # cetes
         cleaned_cetes_ylds, cleaned_cetes_dtms = test_object.clean_returned_data(
             banxico_data["cetes_yld"], banxico_data["cetes_dtm"]
@@ -428,14 +632,29 @@ def test_get_labels_dates_yields():
             reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups
         )
 
+        # --- generate bond identifiers ---
+
+        cetes_ids, bonos_ids = test_object.generate_ids(
+            reordered_cetes_dtms, reordered_bonos_dtms
+        )
+
         # --- final yield curve data ---
 
         yield_curve_data = {
-            "cetes": {"ylds": reordered_cetes_ylds, "dtms": reordered_cetes_dtms},
-            "mbonos": {"ylds": reordered_bonos_ylds, "dtms": reordered_bonos_dtms},
+            "cetes": {
+                "ylds": reordered_cetes_ylds,
+                "dtms": reordered_cetes_dtms,
+                "ids": cetes_ids,
+            },
+            "mbonos": {
+                "ylds": reordered_bonos_ylds,
+                "pxs": reordered_bonos_pxs,
+                "dtms": reordered_bonos_dtms,
+                "ids": bonos_ids,
+            },
         }
 
-        curve_labels, curve_dates, curve_yields, curve_dtms = (
+        curve_labels, curve_dates, curve_yields, curve_dtms, curve_pxs, curve_ids = (
             test_object.get_labels_dates_yields(yield_curve_data)
         )
 
@@ -443,8 +662,8 @@ def test_get_labels_dates_yields():
 
         # yields
         for i, tenor in enumerate(reordered_cetes_ylds):
-            expected_label = test_object.CETES_MATURITY_MAP_YLD.get(
-                tenor.get("idSerie")
+            expected_label = (
+                test_object.CETES_MATURITY_MAP_YLD.get(tenor.get("idSerie")) + " CETES"
             )
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_yield = tenor.get("datos")[0].get("dato")
@@ -452,6 +671,8 @@ def test_get_labels_dates_yields():
             assert curve_labels[i] == expected_label
             assert curve_dates[i] == expected_date
             assert curve_yields[i] == expected_yield
+
+            assert curve_ids[i][:2] == "BI"
 
             try:
                 # Attempt to parse the string using the format code
@@ -462,17 +683,20 @@ def test_get_labels_dates_yields():
                     False
                 ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
 
-        # dtms
+        # dtms and pxs
         for i, tenor in enumerate(reordered_cetes_dtms):
-            expected_label = test_object.CETES_MATURITY_MAP_DTM.get(
-                tenor.get("idSerie")
+            expected_label = (
+                test_object.CETES_MATURITY_MAP_DTM.get(tenor.get("idSerie")) + " CETES"
             )
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_dtm = tenor.get("datos")[0].get("dato")
+            expected_yld = reordered_cetes_ylds[i].get("datos")[0].get("dato")
+            expected_px = 10 / (1 + (expected_dtm * expected_yld) / 36000)
 
             assert curve_labels[i] == expected_label
             assert curve_dates[i] == expected_date
             assert curve_dtms[i] == expected_dtm
+            assert curve_pxs[i] == expected_px
 
             try:
                 # Attempt to parse the string using the format code
@@ -487,8 +711,8 @@ def test_get_labels_dates_yields():
 
         # yields
         for i, tenor in enumerate(reordered_bonos_ylds):
-            expected_label = test_object.MBONOS_MATURITY_MAP_PX.get(
-                tenor.get("idSerie")
+            expected_label = (
+                test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")) + " MBONOS"
             )
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_yield = tenor.get("datos")[0].get("dato")
@@ -496,6 +720,8 @@ def test_get_labels_dates_yields():
             assert curve_labels[i + 5] == expected_label
             assert curve_dates[i + 5] == expected_date
             assert curve_yields[i + 5] == expected_yield
+
+            assert curve_ids[i + 5][:1] == "M"
 
             try:
                 # Attempt to parse the string using the format code
@@ -508,8 +734,9 @@ def test_get_labels_dates_yields():
 
         # dtms
         for i, tenor in enumerate(reordered_bonos_dtms):
-            expected_label = test_object.MBONOS_MATURITY_MAP_DTM.get(
-                tenor.get("idSerie")
+            expected_label = (
+                test_object.MBONOS_MATURITY_MAP_DTM.get(tenor.get("idSerie"))
+                + " MBONOS"
             )
             expected_date = tenor.get("datos")[0].get("fecha")
             expected_dtm = tenor.get("datos")[0].get("dato")
@@ -517,6 +744,27 @@ def test_get_labels_dates_yields():
             assert curve_labels[i + 5] == expected_label
             assert curve_dates[i + 5] == expected_date
             assert curve_dtms[i + 5] == expected_dtm
+
+            try:
+                # Attempt to parse the string using the format code
+                parsed_date = datetime.strptime(expected_date, "%d/%m/%Y")
+                assert isinstance(parsed_date, datetime)
+            except ValueError:
+                assert (
+                    False
+                ), f"Date string '{expected_date}' is not in the expected format DD/MM/YYYY"
+
+        # pxs
+        for i, tenor in enumerate(reordered_bonos_pxs):
+            expected_label = (
+                test_object.MBONOS_MATURITY_MAP_PX.get(tenor.get("idSerie")) + " MBONOS"
+            )
+            expected_date = tenor.get("datos")[0].get("fecha")
+            expected_px = tenor.get("datos")[0].get("dato")
+
+            assert curve_labels[i + 5] == expected_label
+            assert curve_dates[i + 5] == expected_date
+            assert curve_pxs[i + 5] == expected_px
 
             try:
                 # Attempt to parse the string using the format code
@@ -535,17 +783,24 @@ def generate_random_API_responses(n):
     random.seed(42)
 
     def convert_to_days(maturity_str):
-        parts = maturity_str.split(" ")
-        if parts[1].lower() == "days":
-            return int(parts[0])
-        elif parts[1].lower() == "years":
-            return int(parts[0]) * 364
+        day_or_year = maturity_str[-1]
+        num = maturity_str[:-1]
+        if day_or_year.lower() == "d":
+            return int(num)
+        elif day_or_year.lower() == "y":
+            return int(num) * 364
         else:
             raise ValueError(f"Unknown maturity format: {maturity_str}")
 
     test_object = FIdash.BanxicoDataFetcher()
 
-    response_list = []
+    num_cetes = len(test_object.CETES_MATURITY_MAP_DTM)
+    num_mbonos = len(test_object.MBONOS_MATURITY_MAP_DTM)
+    num_summary = len(test_object.SUMMARY_MAP)
+    num_inflation = len(test_object.INFLATION_MAP)
+
+    curve_response_list = []
+    summary_response_list = []
 
     possible_coupons = np.arange(0.25, 15.25, 0.25)
 
@@ -559,23 +814,33 @@ def generate_random_API_responses(n):
         coups = []
 
         summary = []
+        inflation = []
 
-        # establish random response orders
-        rand_order_cetes_yld = random.sample(range(5), 5)
-        rand_order_cetes_dtm = random.sample(range(5), 5)
+        # --- establish random curve response orders ---
 
-        rand_order_mbonos_px = random.sample(range(5), 5)
-        rand_order_mbonos_dtm = random.sample(range(5), 5)
-        rand_order_mbonos_coup = random.sample(range(5), 5)
+        # cetes
+        rand_order_cetes_yld = random.sample(range(num_cetes), num_cetes)
+        rand_order_cetes_dtm = random.sample(range(num_cetes), num_cetes)
 
-        rand_order_summary = random.sample(range(6), 6)
+        # mbonos
+        rand_order_mbonos_px = random.sample(range(num_mbonos), num_mbonos)
+        rand_order_mbonos_dtm = random.sample(range(num_mbonos), num_mbonos)
+        rand_order_mbonos_coup = random.sample(range(num_mbonos), num_mbonos)
+
+        # --- establish random summary data response orders ---
+
+        # summary
+        rand_order_summary = random.sample(range(num_summary), num_summary)
+
+        # inflation
+        rand_order_inflation = random.sample(range(num_inflation), num_inflation)
 
         # establish other random data
-        rand_date = f"{random.randrange(1,29)}/{random.randrange(1,13)}\
-/{random.randrange(2000,2026)}"
+        rand_date = f"{str(random.randrange(1,29)).zfill(2)}/{str(random.randrange(1,13)).zfill(2)}\
+/{str(random.randrange(2000,2026))}"
 
         # generate random mbonos and cetes data
-        for i in range(5):
+        for i in range(num_cetes):
             ylds.append(
                 {
                     "idSerie": list(test_object.CETES_MATURITY_MAP_YLD.keys())[
@@ -658,7 +923,7 @@ def generate_random_API_responses(n):
             )
 
         # generate random summary data
-        for i in range(6):
+        for i in range(num_summary):
             summary.append(
                 {
                     "idSerie": list(test_object.SUMMARY_MAP.keys())[
@@ -675,9 +940,32 @@ def generate_random_API_responses(n):
                     ],
                 }
             )
+        # generate random inflation data
+        sim_inf_date = datetime.strptime(rand_date, "%d/%m/%Y") + relativedelta(
+            months=-1
+        )
+        sim_inf_date = sim_inf_date + relativedelta(day=1)
+        parsed_inf_date = sim_inf_date.strftime("%d/%m/%Y")
+        for i in range(num_inflation):
+            inflation.append(
+                {
+                    "idSerie": list(test_object.INFLATION_MAP.keys())[
+                        rand_order_inflation[i]
+                    ],
+                    "titulo": list(test_object.INFLATION_MAP.values())[
+                        rand_order_inflation[i]
+                    ],
+                    "datos": [
+                        {
+                            "fecha": parsed_inf_date,
+                            "dato": str(round(random.uniform(0, 10), 2)),
+                        }
+                    ],
+                }
+            )
 
         # simulate response structure
-        response = {
+        curve_response = {
             "cetes_yld": ylds,
             "cetes_dtm": dtms_cetes,
             "mbonos_px": pxs,
@@ -686,9 +974,15 @@ def generate_random_API_responses(n):
             "summary": summary,
         }
 
-        response_list.append(response)
+        summary_response = {
+            "summary": summary,
+            "inflation": inflation,
+        }
 
-    return response_list
+        curve_response_list.append(curve_response)
+        summary_response_list.append(summary_response)
+
+    return curve_response_list, summary_response_list
 
 
 def yld_to_px(TC, r, K, d):
@@ -722,3 +1016,83 @@ def find_d(dtms):
         remainder = DPP - (dtm % DPP)
         d.append(0 if remainder == DPP else remainder)
     return d
+
+
+def try_generate_ids(test_object, test_curve_data):
+
+    type_to_prefix = {
+        "cetes": "BI",
+        "bonos": "M",
+    }
+
+    def check_ids(id_list, url):
+        # get url html
+        response = requests.get(url)
+        response.raise_for_status()
+        # parse acquired html
+        html = response.text
+        soup = BeautifulSoup(html, "html.parser")
+        # extract type of bond
+        header = soup.find("span", class_="tituloscont").text
+        prefix = type_to_prefix.get(header.split(" ")[0].lower())
+        # extract maturities from table
+        table = soup.find(id="_id0:tablaDetallesPosicion").find("tbody")
+        mat_dates = [x.find("td").text for x in table.find_all("tr")][:-1]
+        # generate ids to compare
+        ids_to_compare = [
+            f"{prefix}{x.split('/')[2][-2:]}{x.split('/')[1]}{x.split('/')[0]}"
+            for x in mat_dates
+        ]
+
+        assert all([x in ids_to_compare for x in id_list])
+
+    # --- clean returned curve data ---
+
+    # cetes
+    cleaned_cetes_ylds, cleaned_cetes_dtms = test_object.clean_returned_data(
+        test_curve_data["cetes_yld"], test_curve_data["cetes_dtm"]
+    )
+
+    # mbonos
+    cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups = (
+        test_object.clean_returned_data(
+            test_curve_data["mbonos_px"],
+            test_curve_data["mbonos_dtm"],
+            test_curve_data["mbonos_coup"],
+        )
+    )
+
+    # --- reorder returned curve data ---
+
+    # cetes
+    reordered_cetes_ylds, reordered_cetes_dtms = test_object.reorder_data(
+        cleaned_cetes_ylds, cleaned_cetes_dtms
+    )
+
+    # reordered cetes yields not required for this test
+    del reordered_cetes_ylds
+
+    # mbonos
+    reordered_bonos_pxs, reordered_bonos_dtms, reordered_bonos_coups = (
+        test_object.reorder_data(
+            cleaned_mbonos_pxs, cleaned_mbonos_dtms, cleaned_mbonos_coups
+        )
+    )
+
+    # reordered bonos prices and coupon rates not required for this test
+    del reordered_bonos_pxs, reordered_bonos_coups
+
+    # --- generate bond identifiers ---
+
+    id_lists = list(
+        test_object.generate_ids(reordered_cetes_dtms, reordered_bonos_dtms)
+    )
+
+    # amount outstanding urls
+    amt_urls = {
+        "cetes": "https://www.banxico.org.mx/valores/PresentaDetallePosicionGub.faces?BMXC_instrumento=1&BMXC_lang=es_MX",
+        "bonos": "https://www.banxico.org.mx/valores/PresentaDetallePosicionGub.faces?BMXC_instrumento=2&BMXC_lang=es_MX",
+    }
+
+    for i, url in enumerate(amt_urls.values()):
+        check_ids(id_lists[i], url)

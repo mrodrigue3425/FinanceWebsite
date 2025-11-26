@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from . import FIdash
 import os
 import sys
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 current_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.dirname(current_dir)
 template_path = os.path.join(project_root, "templates")
+static_path = os.path.join(project_root, "static")
 
 # --- Initialisations ---
 
@@ -38,7 +39,7 @@ except Exception as e:
     banxico_data_fetcher = None
 
 # declare flask app
-app = Flask(__name__, template_folder=template_path)
+app = Flask(__name__, static_folder=static_path, template_folder=template_path)
 
 # --- Routes ---
 
@@ -64,9 +65,15 @@ def fi_dashboard():
 
     # try get banxico data
     try:
-        curve_labels, curve_dates, curve_yields, curve_dtms, summary_data = (
-            banxico_data_fetcher.get_data()
-        )
+        (
+            curve_labels,
+            curve_dates,
+            curve_yields,
+            curve_dtms,
+            curve_pxs,
+            curve_ids,
+            summary_data,
+        ) = banxico_data_fetcher.get_data()
         logger.info("Retrieved data from Banxico API successfully.")
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         # connection errors
@@ -118,15 +125,11 @@ def fi_dashboard():
         curve_dates=curve_dates,
         curve_yields=curve_yields,
         curve_dtms=curve_dtms,
+        curve_pxs=curve_pxs,
+        curve_ids=curve_ids,
         summary_data=summary_data,
+        anchor_date=banxico_data_fetcher.anchor_date,
     )
-
-
-# options pricer route
-@app.route("/options_pricing")
-def options_pricer():
-    logger.debug("Rendering options pricing.")
-    return render_template("options_pricing.html")
 
 
 # --- Error Handling ---
@@ -135,7 +138,7 @@ def options_pricer():
 @app.errorhandler(404)
 def not_found_error(e):
     # log the not found error
-    logger.warning("Page not found")
+    logger.warning(f"Page not found {request.path}")
 
     error_data = {"message": "Page not found.", "code": 404, "reason": "Not Found"}
     return handle_error(error_data)
