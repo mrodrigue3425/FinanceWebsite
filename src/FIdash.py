@@ -339,9 +339,9 @@ class BanxicoDataFetcher:
         )
 
         # use curve data to anchor inflation data search range
-        inflation_from_date = (min(parsed_datestrings) + relativedelta(months=-3)).strftime(
-            "%Y-%m-%d"
-        )
+        inflation_from_date = (
+            min(parsed_datestrings) + relativedelta(months=-3)
+        ).strftime("%Y-%m-%d")
 
         inflation_to_date = curve_date
 
@@ -363,18 +363,18 @@ class BanxicoDataFetcher:
     def call_api_summ_inf_data(self):
 
         def order_inf_response(inf_response_):
-            
+
             inf_response = copy.deepcopy(inf_response_)
 
             parsed_inf_dates = [
-                datetime.strptime(x.get("fecha"), "%d/%m/%Y") for x in inf_response[0]["datos"]
+                datetime.strptime(x.get("fecha"), "%d/%m/%Y")
+                for x in inf_response[0]["datos"]
             ]
             desired_order = [
-                x[0] for x in sorted(list(enumerate(parsed_inf_dates)), key=lambda y:y[1])
+                x[0]
+                for x in sorted(list(enumerate(parsed_inf_dates)), key=lambda y: y[1])
             ]
-            ordered_inf_datos = [
-                inf_response[0]["datos"][x] for x in desired_order
-            ]
+            ordered_inf_datos = [inf_response[0]["datos"][x] for x in desired_order]
             inf_response[0]["datos"] = ordered_inf_datos
 
             return inf_response
