@@ -339,11 +339,9 @@ class BanxicoDataFetcher:
         )
 
         # use curve data to anchor inflation data search range
-        inflation_from_date = min(parsed_datestrings) + relativedelta(months=-2)
-        # add 1 day to prevent query from returning more than one result
-        inflation_from_date = (inflation_from_date + relativedelta(days=+1)).strftime(
-            "%Y-%m-%d"
-        )
+        inflation_from_date = (
+            min(parsed_datestrings) + relativedelta(months=-3)
+        ).strftime("%Y-%m-%d")
 
         inflation_to_date = curve_date
 
@@ -363,6 +361,23 @@ class BanxicoDataFetcher:
         return acquired_curve_data
 
     def call_api_summ_inf_data(self):
+
+        def order_inf_response(inf_response_):
+
+            inf_response = copy.deepcopy(inf_response_)
+
+            parsed_inf_dates = [
+                datetime.strptime(x.get("fecha"), "%d/%m/%Y")
+                for x in inf_response[0]["datos"]
+            ]
+            desired_order = [
+                x[0]
+                for x in sorted(list(enumerate(parsed_inf_dates)), key=lambda y: y[1])
+            ]
+            ordered_inf_datos = [inf_response[0]["datos"][x] for x in desired_order]
+            inf_response[0]["datos"] = ordered_inf_datos
+
+            return inf_response
 
         # === make the API requests for summary and inflation data ===
 
@@ -396,9 +411,12 @@ class BanxicoDataFetcher:
         # inflation
         inflation_response_json = inlfation_response.json()["bmx"]["series"]
 
+        # order inflation response
+        ordered_inf_response_json = order_inf_response(inflation_response_json)
+
         acquired_summ_inf_data = {
             "summary": summary_response_json,
-            "inflation": inflation_response_json,
+            "inflation": ordered_inf_response_json,
         }
 
         return acquired_summ_inf_data

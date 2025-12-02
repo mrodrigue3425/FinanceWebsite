@@ -148,8 +148,12 @@ def test_banxico_api_calls():
         ]
     )
 
-    # --- test only one inflation point is returned
-    assert len(test_summ_inf_data["inflation"][0]["datos"]) == 1
+    # --- test last returned inflation data point is latest
+    inf_dates = [
+        datetime.strptime(x["fecha"], "%d/%m/%Y")
+        for x in test_summ_inf_data["inflation"][0]["datos"]
+    ]
+    assert inf_dates[-1] == max(inf_dates)
 
     # === test generate_ids ===
 
