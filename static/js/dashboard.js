@@ -1,4 +1,127 @@
 window.addEventListener("DOMContentLoaded", () => {
+  let currentCurveData = window.curveData || {};
+  let currentSummaryData = window.summaryData || {};
+  let currentAnchorDate = window.anchorDate || "";
+
+  // elements to update
+  let TIIEFContainer = document.getElementById("card-TIIEF");
+  let TIIE28Container = document.getElementById("card-TIIE28");
+  let TargetRateContainer = document.getElementById("card-TargetRate");
+  let CPIYOYContainer = document.getElementById("card-MonthlyCPIYoY");
+  let UDIContainer = document.getElementById("card-UDI_MXN");
+  let USDContainer = document.getElementById("card-USD_MXN");
+
+  const updateMap = {
+    TIIEF: { container: TIIEFContainer, pre: "Effective Date: ", unit: "%" },
+    TIIE28: { container: TIIE28Container, pre: "Effective Date: ", unit: "%" },
+    TargetRate: {
+      container: TargetRateContainer,
+      pre: "Effective Date: ",
+      unit: "%",
+    },
+    MonthlyCPIYoY: { container: CPIYOYContainer, pre: "", unit: "%" },
+    UDI_MXN: { container: UDIContainer, pre: "Effective Date: ", unit: "" },
+    USD_MXN: { container: USDContainer, pre: "Effective Date: ", unit: "" },
+  };
+
+  // --- chart update logic ---
+  function updateYieldCurveChart(data) {
+    currentCurveData = {
+      labels: data.curve_labels,
+      yields: data.curve_yields,
+      dtms: data.curve_dtms,
+      prices: data.curve_pxs,
+      ids: data.curve_ids,
+    };
+    currentAnchorDate = data.anchor_date;
+
+    let { labels, yields, dtms, prices, ids } = currentCurveData;
+
+    // recalculate the points (x=years to maturity, y=yields)
+    const points = dtms.map((dtm, i) => ({
+      x: dtm / 365.25, // convert days to years
+      y: yields[i],
+    }));
+
+    // update existing chart
+    if (window.yieldCurveChart instanceof Chart) {
+      // update data points and labels
+      window.yieldCurveChart.data.labels = labels;
+      window.yieldCurveChart.data.datasets[0].data = points;
+
+      // re-render the chart
+      window.yieldCurveChart.update();
+    }
+  }
+
+  // --- summary update logic ---
+
+  function updateSummaryTable(summaryData) {
+    currentSummaryData = summaryData;
+
+    for (const key in updateMap) {
+      if (key) {
+        console.log(`found ${key}`);
+
+        const container = updateMap[key].container;
+        const pre = updateMap[key].pre;
+        const unit = updateMap[key].unit;
+
+        // destroy current tooltip
+        const tooltipInstance = bootstrap.Tooltip.getInstance(container);
+        if (tooltipInstance) {
+          tooltipInstance.dispose();
+        }
+
+        //update tooltip
+        container.title = `${pre}${summaryData[key].date}`;
+        new bootstrap.Tooltip(container);
+
+        //update value
+        container.querySelector(
+          "h7"
+        ).innerHTML = `${summaryData[key].value}${unit}`;
+      }
+    }
+  }
+
+  async function fetchCurveDataByDate(dateStr) {
+    console.log(`Selected date: ${dateStr}`);
+    const response = await fetch("/api/yield-curve", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        date: dateStr,
+      }),
+    });
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch (e) {
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`);
+      }
+    }
+
+    if (!response.ok) {
+      const errorMessage = data?.message || "Unknown error";
+      throw new Error(
+        `Server returned error ${response.status}: ${errorMessage}`
+      );
+    }
+    console.log("Success data:", data);
+
+    // update yield curve chart
+    updateYieldCurveChart(data);
+
+    // update summary bar
+    updateSummaryTable(data.summary_data);
+  }
+
   // === 1. DATE PICKER ===
 
   // function to check if date is a holiday
@@ -96,6 +219,11 @@ window.addEventListener("DOMContentLoaded", () => {
       instance.calendarContainer.style.fontFamily =
         "Inter, system-ui, sans-serif";
       instance.calendarContainer.style.fontSize = "1rem";
+    },
+    onChange: function (selectedDates, dateStr, instance) {
+      if (selectedDates.length > 0) {
+        fetchCurveDataByDate(dateStr);
+      }
     },
   });
 

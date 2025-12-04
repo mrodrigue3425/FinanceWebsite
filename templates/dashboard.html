@@ -64,11 +64,12 @@
         
         <!-- Metric Cards Container -->
         <div class="col-lg-12">
-            <div class="row g-1 align-items-stretch">
+            <div class="row g-1 align-items-stretch" id="summaryBar">
                 
                 <!-- TIIE Fondeo Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
+                         id="card-TIIEF"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
                          title="Effective Date: {{ summary_data.TIIEF.date }}">
@@ -82,9 +83,10 @@
                 <!-- TIIE28 Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top" 
-                                title="Effective Date: {{ summary_data.TIIE28.date }}">
+                         id="card-TIIE28"
+                         data-bs-toggle="tooltip"
+                         data-bs-placement="top" 
+                         title="Effective Date: {{ summary_data.TIIE28.date }}">
                         <div class="card-body text-center">
                             <h6 class="card-subtitle text-muted mb-2">TIIE 28d</h6>
                             <h7 class="card-subtitle fw-bold text-dark">{{summary_data.TIIE28.value}}%</h7>
@@ -95,6 +97,7 @@
                 <!-- Target Rate Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
+                         id="card-TargetRate"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
                          title="Effective Date: {{ summary_data.TargetRate.date }}">
@@ -108,6 +111,7 @@
                 <!-- Inflation Metric -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
+                         id="card-MonthlyCPIYoY"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
                          title="{{ summary_data.MonthlyCPIYoY.date }}">
@@ -121,6 +125,7 @@
                 <!-- UDI value -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
+                         id="card-UDI_MXN"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
                          title="Effective Date: {{ summary_data.UDI_MXN.date }}">
@@ -134,6 +139,7 @@
                 <!-- USD Exchange rate -->
                 <div class="col-lg-2 col-sm-4 col-6">
                     <div class="card shadow-sm border-primary border-4 h-100"
+                         id="card-USD_MXN"
                          data-bs-toggle="tooltip"
                          data-bs-placement="top" 
                          title="Effective Date: {{ summary_data.USD_MXN.date }}">
