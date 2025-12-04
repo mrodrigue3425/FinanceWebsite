@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from . import FIdash
 import os
 import sys
@@ -130,6 +130,40 @@ def fi_dashboard():
         summary_data=summary_data,
         anchor_date=banxico_data_fetcher.anchor_date,
     )
+
+# route to handle requests from date picker
+@app.route("/api/yield-curve", methods=["POST"])
+def date_yield_curve():
+
+    if banxico_data_fetcher is None:
+        error_data = {
+            "message": "Banxico API Key setup failed.",
+            "code": 503,
+            "reason": "Service Unavailable",
+        }
+        return handle_error(error_data)
+
+    try:
+        data = request.get_json()
+        selected_date = data.get("date")
+        if not selected_date:
+            error_data = {
+            "message": "Missing 'date' parameter in request body.",
+            "code": 400,
+            "reason": "Bad Request",
+            }
+            return handle_error(error_data)
+        logger.info(f"Requested date: {selected_date}")
+    except Exception as e:
+        logger.exception(f"Error parsing JSON request: {e}")
+        error_data = {
+            "message": "Error parsing request JSON.",
+            "code": 400,
+            "reason": "Bad Request",
+        }
+        return handle_error(error_data)
+    
+    return jsonify({"status": "Success", "message": f"Date {selected_date} received and logged."}), 200
 
 
 # --- Error Handling ---
