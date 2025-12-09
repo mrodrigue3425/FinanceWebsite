@@ -54,7 +54,36 @@ def home():
 # fixed income dashboard route
 @app.route("/fi_dashboard")
 def fi_dashboard():
-    # check proper api setup
+  return fetch_render_data(mode="wakeup")
+
+# route to handle requests from date picker
+@app.route("/api/yield-curve", methods=["POST"])
+def date_yield_curve():
+    try:
+        data = request.get_json()
+        selected_date = data.get("date")
+        if not selected_date:
+            error_data = {
+            "message": "Missing 'date' parameter in request body.",
+            "code": 400,
+            "reason": "Bad Request",
+            }
+            return handle_error(error_data)
+        logger.info(f"Requested date: {selected_date}")
+    except Exception as e:
+        logger.exception(f"Error parsing JSON request: {e}")
+        error_data = {
+            "message": "Error parsing request JSON.",
+            "code": 400,
+            "reason": "Bad Request",
+        }
+        return handle_error(error_data)
+    
+    return fetch_render_data(mode="update", date=selected_date)
+    
+
+def fetch_render_data(mode, date=None):
+      # check proper api setup
     if banxico_data_fetcher is None:
         error_data = {
             "message": "Banxico API Key setup failed.",
@@ -73,7 +102,7 @@ def fi_dashboard():
             curve_pxs,
             curve_ids,
             summary_data,
-        ) = banxico_data_fetcher.get_data()
+        ) = banxico_data_fetcher.get_data() if mode == "wakeup" else banxico_data_fetcher.get_data()
         logger.info("Retrieved data from Banxico API successfully.")
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
         # connection errors
@@ -117,53 +146,33 @@ def fi_dashboard():
         }
 
         return handle_error(error_data)
-
-    logger.debug("Rendering dashboard.")
-    return render_template(
-        "dashboard.html",
-        curve_labels=curve_labels,
-        curve_dates=curve_dates,
-        curve_yields=curve_yields,
-        curve_dtms=curve_dtms,
-        curve_pxs=curve_pxs,
-        curve_ids=curve_ids,
-        summary_data=summary_data,
-        anchor_date=banxico_data_fetcher.anchor_date,
-    )
-
-# route to handle requests from date picker
-@app.route("/api/yield-curve", methods=["POST"])
-def date_yield_curve():
-
-    if banxico_data_fetcher is None:
-        error_data = {
-            "message": "Banxico API Key setup failed.",
-            "code": 503,
-            "reason": "Service Unavailable",
-        }
-        return handle_error(error_data)
-
-    try:
-        data = request.get_json()
-        selected_date = data.get("date")
-        if not selected_date:
-            error_data = {
-            "message": "Missing 'date' parameter in request body.",
-            "code": 400,
-            "reason": "Bad Request",
-            }
-            return handle_error(error_data)
-        logger.info(f"Requested date: {selected_date}")
-    except Exception as e:
-        logger.exception(f"Error parsing JSON request: {e}")
-        error_data = {
-            "message": "Error parsing request JSON.",
-            "code": 400,
-            "reason": "Bad Request",
-        }
-        return handle_error(error_data)
     
-    return jsonify({"status": "Success", "message": f"Date {selected_date} received and logged."}), 200
+    if mode == "wakeup":
+        logger.debug("Rendering dashboard.")
+        return render_template(
+            "dashboard.html",
+            curve_labels=curve_labels,
+            curve_dates=curve_dates,
+            curve_yields=curve_yields,
+            curve_dtms=curve_dtms,
+            curve_pxs=curve_pxs,
+            curve_ids=curve_ids,
+            summary_data=summary_data,
+            anchor_date=banxico_data_fetcher.anchor_date,
+        )
+    elif mode == "update":
+        logger.debug("Updating dashboard.")
+        return jsonify({
+            "status": "success",
+            "curve_labels": curve_labels,
+            "curve_dates": curve_dates,
+            "curve_yields": curve_yields,
+            "curve_dtms": curve_dtms,
+            "curve_pxs": curve_pxs,
+            "curve_ids": curve_ids,
+            "summary_data": summary_data,
+            "anchor_date": banxico_data_fetcher.anchor_date,
+        }), 200
 
 
 # --- Error Handling ---
