@@ -61,8 +61,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
     for (const key in updateMap) {
       if (key) {
-        console.log(`found ${key}`);
-
         const container = updateMap[key].container;
         const pre = updateMap[key].pre;
         const unit = updateMap[key].unit;
@@ -113,7 +111,7 @@ window.addEventListener("DOMContentLoaded", () => {
         `Server returned error ${response.status}: ${errorMessage}`
       );
     }
-    console.log("Success data:", data);
+    console.debug("Success data:", data);
 
     // update yield curve chart
     updateYieldCurveChart(data);
