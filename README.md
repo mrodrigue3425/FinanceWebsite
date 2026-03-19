@@ -116,11 +116,14 @@ cd FinanceWebsite
 python -m venv venv
 source venv/bin/activate       
 
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
 python setup.py build_ext --inplace
 
-flask run
+echo "BANXICO_API_KEY=your_api_key_here" > .env
+
+python -m flask --app src.app run
 ```
 The website will be available in your browser at 
 ```
@@ -139,7 +142,8 @@ source venv/bin/activate
 ```
 ### 3. Install Dependencies
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 
 ```
 
@@ -147,10 +151,28 @@ pip install -r requirements.txt
 ```bash
 python setup.py build_ext --inplace
 ```
-
-### 5. Run the Flask Server
+Optional sanity check:
 ```bash
-  flask run
+python -c "import cpp_engine; print('cpp_engine import OK')"
+```
+
+### 5. Add Your Banxico API Key
+Create a `.env` file in the repository root:
+```bash
+echo "BANXICO_API_KEY=your_api_key_here" > .env
+```
+Note: you can generate an api key for free [here](https://www.banxico.org.mx/SieAPIRest/service/v1/token).
+
+### 6. Run the Flask Server
+```bash
+python -m flask --app src.app run
+```
+
+
+If you prefer using `flask run` directly, set the environment variable first:
+```bash
+export FLASK_APP=src.app
+flask run
 ```
 ---
 
